@@ -10,8 +10,9 @@ import {
   signInWithEmailAndPassword,
   signOut,
   User,
+  Auth,
 } from 'firebase/auth';
-import { auth } from '@/firebaseConfig';
+import getFirebaseAuth from '@/lib/firebaseAuth';
 
 interface AuthContextType {
   user: User | null;
@@ -23,23 +24,30 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: PropsWithChildren) {
+  const [auth, setAuth] = useState<Auth | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
+    getFirebaseAuth().then((authInstance) => {
+      if (authInstance) {
+        setAuth(authInstance);
+        const unsubscribe = onAuthStateChanged(authInstance, (user) => {
+          setUser(user);
+          setLoading(false);
+        });
+        return () => unsubscribe();
+      }
     });
-
-    return () => unsubscribe();
   }, []);
 
-  const login = (email: string, password: string) => {
+  const login = async (email: string, password: string) => {
+    if (!auth) throw new Error('Auth not initialized');
     return signInWithEmailAndPassword(auth, email, password);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    if (!auth) throw new Error('Auth not initialized');
     return signOut(auth);
   };
 

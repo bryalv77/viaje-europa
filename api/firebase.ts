@@ -1,4 +1,4 @@
-import { db } from '@/firebaseConfig';
+import { db } from '@/lib/firebase';
 import { ref, onValue, push, update, off, remove } from 'firebase/database';
 import { TripItem } from '@/types';
 

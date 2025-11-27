@@ -35,6 +35,35 @@ export default function TabLayout() {
         options={{
           title: 'Viaje',
           tabBarIcon: ({ color }) => <TabBarIcon name="plane" color={color} />,
+          headerRight: () => (
+            <Link href="/modal" asChild>
+              <Pressable>
+                {({ pressed }) => (
+                  <FontAwesome
+                    name="plus"
+                    size={25}
+                    color={Colors[colorScheme ?? 'light'].text}
+                    className={`mr-4 ${pressed ? 'opacity-50' : 'opacity-100'}`}
+                  />
+                )}
+              </Pressable>
+            </Link>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="map"
+        options={{
+          title: 'Mapa',
+          tabBarIcon: ({ color }) => <TabBarIcon name="map" color={color} />,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Perfil',
+          tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
           headerLeft: () => (
             <Pressable
               onPress={async () => {
@@ -51,20 +80,6 @@ export default function TabLayout() {
                 />
               )}
             </Pressable>
-          ),
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable>
-                {({ pressed }) => (
-                  <FontAwesome
-                    name="plus"
-                    size={25}
-                    color={Colors[colorScheme ?? 'light'].text}
-                    className={`mr-4 ${pressed ? 'opacity-50' : 'opacity-100'}`}
-                  />
-                )}
-              </Pressable>
-            </Link>
           ),
         }}
       />
