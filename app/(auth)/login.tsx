@@ -26,22 +26,25 @@ export default function LoginScreen() {
   };
 
   return (
-    <Center className="flex-1 bg-background">
-      <Box className="p-4 w-full max-w-md">
-        <Heading className="text-2xl font-bold">
+    <Center className="flex-1 bg-gray-50 dark:bg-gray-900">
+      <Box className="p-8 w-full max-w-md">
+        <Heading className="text-3xl font-bold text-center">
           Bienvenido
         </Heading>
-        <Heading className="mt-2 text-gray-500 font-medium text-base">
-          Inicia sesión para continuar
+        <Heading className="mt-2 text-gray-500 font-medium text-center text-base">
+          Inicia sesión para planificar tu viaje
         </Heading>
 
-        <VStack className="space-y-5 mt-8">
+        <VStack className="space-y-6 mt-10">
           <FormControl>
             <FormControlLabel>
-              <Text>Email</Text>
+              <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Email
+              </Text>
             </FormControlLabel>
             <Input>
               <InputField
+                className="rounded-lg bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 p-4"
                 placeholder="tu@email.com"
                 value={email}
                 onChangeText={setEmail}
@@ -52,10 +55,13 @@ export default function LoginScreen() {
           </FormControl>
           <FormControl>
             <FormControlLabel>
-              <Text>Contraseña</Text>
+              <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Contraseña
+              </Text>
             </FormControlLabel>
             <Input>
               <InputField
+                className="rounded-lg bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 p-4"
                 placeholder="********"
                 value={password}
                 onChangeText={setPassword}
@@ -63,8 +69,13 @@ export default function LoginScreen() {
               />
             </Input>
           </FormControl>
-          <Button onPress={handleLogin} className="mt-5">
-            <ButtonText>Iniciar Sesión</ButtonText>
+          <Button
+            onPress={handleLogin}
+            className="mt-6 bg-primary-500 rounded-full"
+          >
+            <ButtonText className="text-white font-bold py-2">
+              Iniciar Sesión
+            </ButtonText>
           </Button>
         </VStack>
       </Box>

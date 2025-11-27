@@ -1,6 +1,6 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApp, getApps } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, indexedDBLocalPersistence, setPersistence } from 'firebase/auth';
 import { getDatabase } from 'firebase/database';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
@@ -21,7 +21,19 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+
+// Initialize Firebase Auth with persistence
 const auth = getAuth(app);
+
+// Set persistence to work across app restarts
+setPersistence(auth, indexedDBLocalPersistence)
+  .then(() => {
+    console.log('Firebase Auth persistence enabled');
+  })
+  .catch((error) => {
+    console.error('Error enabling Firebase Auth persistence:', error);
+  });
+
 const db = getDatabase(app);
 
 export { app, auth, db };
