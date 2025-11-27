@@ -50,6 +50,7 @@ export default function TripScreen() {
     days: number;
     hours: number;
     minutes: number;
+    seconds: number;
   } | null>(null);
   const router = useRouter();
 
@@ -57,14 +58,14 @@ export default function TripScreen() {
     const unsubscribe = getTripItems((newItems) => {
       const sortedItems = newItems.sort(
         (a, b) =>
-          new Date(`${a['F Inicio']}T${a.Inicio}`).getTime() -
-          new Date(`${b['F Inicio']}T${b.Inicio}`).getTime()
+          new Date(`${a['F Inicio']} ${a.Inicio}`).getTime() -
+          new Date(`${b['F Inicio']} ${b.Inicio}`).getTime()
       );
       setItems(sortedItems);
 
       const now = new Date();
       const futureEvent = sortedItems.find(
-        (item) => new Date(`${item['F Inicio']}T${item.Inicio}`) > now
+        (item) => new Date(`${item['F Inicio']} ${item.Inicio}`) > now
       );
       setNextEvent(futureEvent || null);
 
@@ -81,7 +82,7 @@ export default function TripScreen() {
     }
 
     const calculateCountdown = () => {
-      const eventDate = new Date(`${nextEvent['F Inicio']}T${nextEvent.Inicio}`);
+      const eventDate = new Date(`${nextEvent['F Inicio']} ${nextEvent.Inicio}`);
       const now = new Date();
       const difference = eventDate.getTime() - now.getTime();
 
@@ -90,7 +91,7 @@ export default function TripScreen() {
         // Maybe find the *next* next event
         const now = new Date();
         const futureEvent = items.find(
-          (item) => new Date(`${item['F Inicio']}T${item.Inicio}`) > now
+          (item) => new Date(`${item['F Inicio']} ${item.Inicio}`) > now
         );
         setNextEvent(futureEvent || null);
         return;
@@ -99,12 +100,13 @@ export default function TripScreen() {
       const days = Math.floor(difference / (1000 * 60 * 60 * 24));
       const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
       const minutes = Math.floor((difference / 1000 / 60) % 60);
+      const seconds = Math.floor((difference / 1000) % 60);
 
-      setCountdown({ days, hours, minutes });
+      setCountdown({ days, hours, minutes, seconds });
     };
 
     calculateCountdown();
-    const interval = setInterval(calculateCountdown, 1000 * 60); // Update every minute
+    const interval = setInterval(calculateCountdown, 1000); // Update every second
 
     return () => clearInterval(interval);
   }, [nextEvent, items]);
@@ -231,7 +233,7 @@ export default function TripScreen() {
         <Box className="bg-primary-100 p-4 dark:bg-primary-900">
           <Text className="text-center text-primary-800 dark:text-primary-200">
             El proximo evento es en {countdown.days}d {countdown.hours}h{' '}
-            {countdown.minutes}m
+            {countdown.minutes}m {countdown.seconds}s
           </Text>
         </Box>
       )}
