@@ -10,10 +10,11 @@ import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import { useColorScheme } from '@/components/useColorScheme';
-import { Slot, usePathname } from 'expo-router';
+import { Slot, usePathname, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Fab, FabIcon } from '@/components/ui/fab';
 import { MoonIcon, SunIcon } from '@/components/ui/icon';
+import { AuthProvider, useAuth } from '@/hooks/useAuth';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -22,29 +23,33 @@ export {
 
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
-  const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    ...FontAwesome.font,
-  });
-
-  const [styleLoaded, setStyleLoaded] = useState(false);
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
-  useEffect(() => {
-    if (error) throw error;
-  }, [error]);
+function useProtectedRoutes() {
+  const segments = useSegments();
+  const router = useRouter();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
-    if (loaded) {
+    if (loading) return;
+
+    const inAuthGroup = segments[0] === '(auth)';
+
+    if (!user && !inAuthGroup) {
+      router.replace('/login');
+    } else if (user && inAuthGroup) {
+      router.replace('/tabs/trip');
+    }
+
+    if (!loading) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
-  return <RootLayoutNav />;
+  }, [user, segments, loading, router]);
 }
 
 function RootLayoutNav() {
   const pathname = usePathname();
   const [colorMode, setColorMode] = useState<'light' | 'dark'>('light');
+
+  useProtectedRoutes();
 
   return (
     <GluestackUIProvider mode={colorMode}>
@@ -63,5 +68,22 @@ function RootLayoutNav() {
         )}
       </ThemeProvider>
     </GluestackUIProvider>
+  );
+}
+
+export default function RootLayout() {
+  const [loaded, error] = useFonts({
+    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    ...FontAwesome.font,
+  });
+
+  useEffect(() => {
+    if (error) throw error;
+  }, [error]);
+
+  return (
+    <AuthProvider>
+      <RootLayoutNav />
+    </AuthProvider>
   );
 }
