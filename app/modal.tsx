@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { Platform, ScrollView } from 'react-native';
+import { Platform, Pressable, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { TripItem } from '@/types';
 import { useState } from 'react';
@@ -12,6 +12,8 @@ import { Input, InputField } from '@/components/ui/input';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { AlertDialog, AlertDialogBackdrop, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader } from '@/components/ui/alert-dialog';
+import { HStack } from '@/components/ui/hstack';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 
 const FormSection: React.FC<{ title: string; children: React.ReactNode }> = ({
@@ -81,9 +83,18 @@ export default function ModalScreen() {
   return (
     <ScrollView className="bg-gray-50 dark:bg-gray-900">
       <VStack className="p-6 space-y-8">
+        <HStack className="flex items-center gap-4">
+          <Pressable onPress={() => router.back()}>
+            <FontAwesome
+                    name="chevron-left"
+                    size={16}
+                    className='text-primary-500'
+                  />
+          </Pressable>
         <Heading className="text-2xl font-bold text-center">
           {isEdit ? 'Editar Evento' : 'Añadir Evento'}
         </Heading>
+        </HStack>
 
         <FormSection title="General">
           <FormInput

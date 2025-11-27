@@ -12,6 +12,8 @@ import { useEffect } from 'react';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
+import { Pressable } from 'react-native';
+import { Text } from '@/components/ui/text';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -41,7 +43,7 @@ function RootLayoutNav() {
       router.replace('/(auth)/login');
     } else if (user && inAuthGroup) {
       // User is authenticated and in the auth group (e.g., just logged in), redirect to app's main screen
-      router.replace('/trip');
+      router.replace('/(tabs)/trip');
     }
 
     // Hide the splash screen now that we are ready to render.
@@ -57,14 +59,14 @@ function RootLayoutNav() {
     <GluestackUIProvider>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack>
-          <Stack.Screen name="trip" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen
             name="modal"
-            options={{
+            options={() => ({
               presentation: 'modal',
-              title: 'Añadir Evento',
-            }}
+              headerShown: false,
+            })}
           />
         </Stack>
       </ThemeProvider>
