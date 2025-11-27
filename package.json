@@ -9,7 +9,15 @@
     "web": "expo start --web",
     "build": "expo export --platform web --output-dir dist",
     "build:preview": "expo export --platform web --output-dir dist",
-    "test": "jest --watchAll"
+    "test": "jest --watchAll",
+    "lint": "expo lint",
+    "deploy-web": "expo export:web && firebase deploy --only hosting:finanbra",
+    "deploy": "npx eas update && npx expo export --platform web && firebase deploy --only hosting:finanbra && npx eas deploy --prod && npx eas build",
+    "export-web": "npx expo export",
+    "ios-store": "npx eas submit --platform ios --profile production",
+    "android-store": "npx eas build --platform android --auto-submit",
+    "store": "npx eas submit --platform ios --profile production && npx eas build --platform android --auto-submit",
+    "update": "npx eas update --channel production --message deploy-to-production"
   },
   "jest": {
     "preset": "jest-expo"
