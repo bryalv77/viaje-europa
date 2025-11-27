@@ -8,79 +8,71 @@ import {
 } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useColorScheme } from '@/components/useColorScheme';
-import { Slot, usePathname, useRouter, useSegments } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { Fab, FabIcon } from '@/components/ui/fab';
-import { MoonIcon, SunIcon } from '@/components/ui/icon';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from 'expo-router';
-
+// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
-function useProtectedRoutes() {
+function RootLayoutNav() {
+  const colorScheme = useColorScheme();
+  const { user, loading: authLoading } = useAuth();
+  const [fontsLoaded, fontError] = useFonts({
+    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    ...FontAwesome.font,
+  });
   const segments = useSegments();
   const router = useRouter();
-  const { user, loading } = useAuth();
 
   useEffect(() => {
-    if (loading) return;
+    if (fontError) throw fontError;
+  }, [fontError]);
+
+  useEffect(() => {
+    // Wait until both auth state and fonts are loaded.
+    if (!fontsLoaded || authLoading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
 
     if (!user && !inAuthGroup) {
-      router.replace('/login');
+      // User is not authenticated and not in the auth group, redirect to login
+      router.replace('/(auth)/login');
     } else if (user && inAuthGroup) {
-      router.replace('/tabs/trip');
+      // User is authenticated and in the auth group (e.g., just logged in), redirect to app's main screen
+      router.replace('/trip');
     }
 
-    if (!loading) {
-      SplashScreen.hideAsync();
-    }
-  }, [user, segments, loading, router]);
-}
+    // Hide the splash screen now that we are ready to render.
+    SplashScreen.hideAsync();
+  }, [user, authLoading, fontsLoaded, segments, router]);
 
-function RootLayoutNav() {
-  const pathname = usePathname();
-  const [colorMode, setColorMode] = useState<'light' | 'dark'>('light');
-
-  useProtectedRoutes();
+  // Prevent rendering until fonts are loaded and auth state is determined.
+  if (!fontsLoaded || authLoading) {
+    return null;
+  }
 
   return (
-    <GluestackUIProvider mode={colorMode}>
-      <ThemeProvider value={colorMode === 'dark' ? DarkTheme : DefaultTheme}>
-        <Slot />
-        {pathname === '/' && (
-          <Fab
-            onPress={() =>
-              setColorMode(colorMode === 'dark' ? 'light' : 'dark')
-            }
-            className="m-6"
-            size="lg"
-          >
-            <FabIcon as={colorMode === 'dark' ? MoonIcon : SunIcon} />
-          </Fab>
-        )}
+    <GluestackUIProvider>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Stack>
+          <Stack.Screen name="trip" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="modal"
+            options={{
+              presentation: 'modal',
+              title: 'Añadir Evento',
+            }}
+          />
+        </Stack>
       </ThemeProvider>
     </GluestackUIProvider>
   );
 }
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    ...FontAwesome.font,
-  });
-
-  useEffect(() => {
-    if (error) throw error;
-  }, [error]);
-
   return (
     <AuthProvider>
       <RootLayoutNav />

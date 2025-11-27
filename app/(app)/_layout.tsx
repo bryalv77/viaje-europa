@@ -68,7 +68,7 @@ export default function TabLayout() {
             <Pressable
               onPress={async () => {
                 await logout();
-                router.replace('/login');
+                router.replace('/(auth)/login');
               }}
             >
               {({ pressed }) => (
