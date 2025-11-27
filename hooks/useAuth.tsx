@@ -9,6 +9,8 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
+  updateProfile,
+  updatePassword,
   User,
   Auth,
 } from 'firebase/auth';
@@ -19,6 +21,11 @@ interface AuthContextType {
   loading: boolean;
   login: (email: any, password: any) => Promise<any>;
   logout: () => Promise<any>;
+  updateUserProfile: (data: {
+    displayName?: string;
+    photoURL?: string;
+  }) => Promise<void>;
+  updateUserPassword: (newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -51,11 +58,30 @@ export function AuthProvider({ children }: PropsWithChildren) {
     return signOut(auth);
   };
 
+  const updateUserProfile = async (data: {
+    displayName?: string;
+    photoURL?: string;
+  }) => {
+    if (!auth || !auth.currentUser) throw new Error('Auth not initialized');
+    await updateProfile(auth.currentUser, data);
+    // Manually update user state to reflect changes immediately
+    setUser((prevUser) =>
+      prevUser ? { ...prevUser, ...data } : null
+    );
+  };
+
+  const updateUserPassword = (newPassword: string) => {
+    if (!auth || !auth.currentUser) throw new Error('Auth not initialized');
+    return updatePassword(auth.currentUser, newPassword);
+  };
+
   const value = {
     user,
     loading,
     login,
     logout,
+    updateUserProfile,
+    updateUserPassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

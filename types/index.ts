@@ -11,6 +11,7 @@ export interface TripItem {
   Persona: string;
   Información: string;
   Localizacion: string;
+  geolocatition?: string;
   Vuelo: string;
   Reserva: string;
   Mano: string;

@@ -1,12 +1,12 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Link, Tabs, useRouter } from 'expo-router';
+import { useColorScheme } from 'nativewind';
 
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
-import { useColorScheme } from '@/components/useColorScheme';
-import {Colors} from '@/constants/Colors';
+import { Colors } from '@/constants/Colors';
 import { useAuth } from '@/hooks/useAuth';
-import { Pressable } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
@@ -17,7 +17,7 @@ function TabBarIcon(props: {
 }
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { colorScheme, toggleColorScheme } = useColorScheme();
   const { logout } = useAuth();
   const router = useRouter();
 
@@ -36,18 +36,36 @@ export default function TabLayout() {
           title: 'Viaje',
           tabBarIcon: ({ color }) => <TabBarIcon name="plane" color={color} />,
           headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginRight: 15,
+              }}
+            >
+              <Pressable onPress={toggleColorScheme} style={{ marginRight: 20 }}>
                 {({ pressed }) => (
                   <FontAwesome
-                    name="plus"
+                    name={colorScheme === 'dark' ? 'sun-o' : 'moon-o'}
                     size={25}
                     color={Colors[colorScheme ?? 'light'].text}
-                    className={`mr-4 ${pressed ? 'opacity-50' : 'opacity-100'}`}
+                    style={{ opacity: pressed ? 0.5 : 1 }}
                   />
                 )}
               </Pressable>
-            </Link>
+              <Link href="/modal" asChild>
+                <Pressable>
+                  {({ pressed }) => (
+                    <FontAwesome
+                      name="plus"
+                      size={25}
+                      color={Colors[colorScheme ?? 'light'].text}
+                      style={{ opacity: pressed ? 0.5 : 1 }}
+                    />
+                  )}
+                </Pressable>
+              </Link>
+            </View>
           ),
         }}
       />
