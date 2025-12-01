@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { Platform, Pressable, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { TripItem } from '@/types';
+import { Participant, TripItem } from '@/types';
 import { useState } from 'react';
 import { addTripItem, updateTripItem, deleteTripItem } from '@/api/firebase';
 import { VStack } from '@/components/ui/vstack';
@@ -15,6 +15,8 @@ import { AlertDialog, AlertDialogBackdrop, AlertDialogBody, AlertDialogContent, 
 import { HStack } from '@/components/ui/hstack';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
+import { CheckIcon, ChevronDownIcon } from '@/components/ui/icon';
+import { Checkbox, CheckboxIcon, CheckboxIndicator, CheckboxLabel } from '@/components/ui/checkbox';
 
 const FormSection: React.FC<{ title: string; children: React.ReactNode }> = ({
   title,
@@ -59,6 +61,8 @@ export default function ModalScreen() {
   );
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
+  const [participants, setParticipants] = useState<Participant[]>([]);
+
   const handleChange = (key: keyof TripItem, value: string) => {
     setFormState((prevState) => ({ ...prevState, [key]: value }));
   };
@@ -98,49 +102,57 @@ export default function ModalScreen() {
 
         <FormSection title="General">
           <FormInput
-            label="Tipo"
-            value={formState.Tipo || ''}
-            onChangeText={(v) => handleChange('Tipo', v)}
+            label="type"
+            value={formState.type || ''}
+            onChangeText={(v) => handleChange('type', v)}
           />
           <FormInput
             label="Descripción"
-            value={formState.Descripción || ''}
-            onChangeText={(v) => handleChange('Descripción', v)}
+            value={formState.description || ''}
+            onChangeText={(v) => handleChange('description', v)}
           />
-          <FormInput
-            label="Persona"
-            value={formState.Persona || ''}
-            onChangeText={(v) => handleChange('Persona', v)}
-          />
+      
+                {
+                  participants.map(participant => (
+                     <Checkbox value={participant.participantId} isChecked={formState.participants?.includes(participant.participantId)} size="md">
+                      {/* <CheckboxIndicator>
+                        <CheckboxIcon as={CheckIcon} />
+                      </CheckboxIndicator> */}
+                      <CheckboxLabel>{participant.name}</CheckboxLabel>
+                    </Checkbox>
+                    
+                  ))
+                }
+             
         </FormSection>
 
         <FormSection title="Fechas y Horas">
           <FormInput
             label="Fecha Inicio"
-            value={formState['F Inicio'] || ''}
-            onChangeText={(v) => handleChange('F Inicio', v)}
+            value={formState['initial_date'] || ''}
+            onChangeText={(v) => handleChange('initial_date', v)}
           />
           <FormInput
             label="Hora Inicio"
-            value={formState.Inicio || ''}
-            onChangeText={(v) => handleChange('Inicio', v)}
+            value={formState.initial_time || ''}
+            onChangeText={(v) => handleChange('initial_time', v)}
           />
           <FormInput
             label="Fecha Fin"
-            value={formState['F Fin'] || ''}
-            onChangeText={(v) => handleChange('F Fin', v)}
+            value={formState.end_date || ''}
+            onChangeText={(v) => handleChange('end_date', v)}
           />
           <FormInput
             label="Hora Fin"
-            value={formState.Fin || ''}
-            onChangeText={(v) => handleChange('Fin', v)}
+            value={formState.end_time || ''}
+            onChangeText={(v) => handleChange('end_time', v)}
           />
         </FormSection>
         
         <FormSection title="Ubicación">
-            <FormInput label="Lugar Inicio" value={formState["L Inicio"] || ""} onChangeText={(v) => handleChange("L Inicio", v)} />
-            <FormInput label="Lugar Fin" value={formState["L Fin"] || ""} onChangeText={(v) => handleChange("L Fin", v)} />
-            <FormInput label="Localización (URL)" value={formState.Localizacion || ""} onChangeText={(v) => handleChange("Localizacion", v)} />
+            <FormInput label="Lugar Inicio" value={formState.initial_place || ""} onChangeText={(v) => handleChange('initial_place', v)} />
+            <FormInput label="Lugar Fin" value={formState.final_place || ""} onChangeText={(v) => handleChange('final_place', v)} />
+            <FormInput label="Localización (URL)" value={formState.maps_url || ""} onChangeText={(v) => handleChange('maps_url', v)} />
         </FormSection>
 
         <Box className="mt-8">

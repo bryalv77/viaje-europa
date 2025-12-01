@@ -105,10 +105,10 @@ export default function MapScreen() {
       const mapMarkers: MapMarker[] = itemsWithCoords.map(item => ({
         id: item.id,
         coordinates: item.coords!,
-        title: item.Descripción,
-        description: `${item.Tipo} • ${item['F Inicio']}`,
-        type: item.Tipo,
-        location: item['L Inicio'],
+        title: item.description,
+        description: `${item.type} • ${item['initial_date']}`,
+        type: item.type,
+        location: item['initial_place'],
         item: item
       }));
 
@@ -232,10 +232,10 @@ export default function MapScreen() {
       onPress={() => handleMarkerPress({
         id: item.id,
         coordinates: coords,
-        title: item.Descripción,
-        description: `${item.Tipo} • ${item['F Inicio']}`,
-        type: item.Tipo,
-        location: item['L Inicio'],
+        title: item.description,
+        description: `${item.type} • ${item['initial_date']}`,
+        type: item.type,
+        location: item.initial_place,
         item
       })}
       className="mb-3 mx-4"
@@ -243,24 +243,24 @@ export default function MapScreen() {
       <Box className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
         <HStack className="items-start space-3">
           <View style={{
-            backgroundColor: getColorForType(item.Tipo),
+            backgroundColor: getColorForType(item.type),
             width: 40,
             height: 40,
             borderRadius: 20,
             justifyContent: 'center',
             alignItems: 'center',
           }}>
-            <FontAwesome name={getIconForType(item.Tipo)} size={20} color="white" />
+            <FontAwesome name={getIconForType(item.type)} size={20} color="white" />
           </View>
 
           <VStack className="flex-1">
-            <Text className="font-bold text-base">{item.Descripción}</Text>
+            <Text className="font-bold text-base">{item.description}</Text>
             <Text className="text-sm text-gray-600 dark:text-gray-400">
-              {item.Tipo} • {item['F Inicio']}
+              {item.type} • {item['initial_date']}
             </Text>
-            {item['L Inicio'] && (
+            {item.initial_place && (
               <Text className="text-sm text-gray-500 dark:text-gray-300 mt-1">
-                📍 {item['L Inicio']}
+                📍 {item.initial_place}
               </Text>
             )}
             <Text className="text-xs text-gray-400 dark:text-gray-500 mt-1">
@@ -275,9 +275,9 @@ export default function MapScreen() {
             >
               <FontAwesome name="external-link" size={14} color="#2563eb" />
             </TouchableOpacity>
-            {item.Localizacion && (
+            {item.maps_url && (
               <TouchableOpacity
-                onPress={() => Linking.openURL(item.Localizacion)}
+                onPress={() => Linking.openURL(item.maps_url)}
                 className="p-2 bg-green-100 dark:bg-green-900 rounded-full"
               >
                 <FontAwesome name="map-marker" size={14} color="#22c55e" />
