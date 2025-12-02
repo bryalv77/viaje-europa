@@ -45,6 +45,13 @@ function Layout() {
             headerShown: false,
           })}
         />
+        <Stack.Screen
+          name="trip-form"
+          options={() => ({
+            presentation: 'modal',
+            headerShown: false,
+          })}
+        />
       </Stack>
     </ThemeProvider>
   );

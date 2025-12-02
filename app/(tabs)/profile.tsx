@@ -19,11 +19,15 @@ import { Input, InputField } from '@/components/ui/input';
 import { useTrips } from '@/hooks/useTrips';
 import { Spinner } from '@/components/ui/spinner';
 import { Card } from '@/components/ui/card';
+import { useRouter } from 'expo-router';
+import { deleteTrip } from '@/api/firebase';
+import { HStack } from '@/components/ui/hstack';
 
 export default function ProfileScreen() {
   const { user, updateUserProfile, updateUserPassword } = useAuth();
-  const { trips, loading: tripsLoading } = useTrips();
+  const { trips, currentTripId, setCurrentTripId, refetch, loading: tripsLoading } = useTrips();
   const toast = useToast();
+  const router = useRouter();
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -97,6 +101,26 @@ export default function ProfileScreen() {
     } catch (e: any) {
       Alert.alert('Error', e.message);
     }
+  };
+
+  const handleDeleteTrip = (tripId: string) => {
+    Alert.alert(
+      "Delete Trip",
+      "Are you sure you want to delete this trip and all its data? This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            if (user) {
+              await deleteTrip(user.uid, tripId);
+              refetch();
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleChangePassword = async () => {
@@ -179,14 +203,44 @@ export default function ProfileScreen() {
         </VStack>
 
         <VStack space="md" className="mt-8">
-          <Heading size="md">My Trips</Heading>
+          <HStack className="justify-between items-center">
+            <Heading size="md">My Trips</Heading>
+            <Button size="sm" onPress={() => router.push('/trip-form')}>
+              <ButtonText>Add Trip</ButtonText>
+            </Button>
+          </HStack>
           {tripsLoading ? (
             <Spinner />
           ) : trips.length > 0 ? (
             trips.map((trip) => (
               <Card key={trip.id} className="p-4">
-                <Heading size="sm">{trip.name}</Heading>
-                <Text>{trip.description}</Text>
+                <VStack space="md">
+                  <Heading size="sm">{trip.name}</Heading>
+                  <Text>{trip.description}</Text>
+                  <HStack space="sm" className="mt-2">
+                    <Button
+                      size="sm"
+                      onPress={() => setCurrentTripId(trip.id!)}
+                      isDisabled={currentTripId === trip.id}
+                    >
+                      <ButtonText>{currentTripId === trip.id ? 'Selected' : 'Select'}</ButtonText>
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onPress={() => router.push({ pathname: '/trip-form', params: { tripId: trip.id } })}
+                    >
+                      <ButtonText>Edit</ButtonText>
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="link"
+                      onPress={() => handleDeleteTrip(trip.id!)}
+                    >
+                      <ButtonText className="text-red-500">Delete</ButtonText>
+                    </Button>
+                  </HStack>
+                </VStack>
               </Card>
             ))
           ) : (

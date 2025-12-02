@@ -31,29 +31,28 @@ export const deleteTripItem = (tripId: string, itemId: string) => {
   return remove(itemRef);
 };
 
-export const addTrip = async (userId: string, tripData: { name: string, description: string }) => {
-  const tripsRef = ref(db, `/trips`);
-  const newTripRef = push(tripsRef);
-  const newTripId = newTripRef.key;
+export const updateTrip = (tripId: string, tripData: Partial<Trip>) => {
+  const tripRef = ref(db, `/trips/${tripId}`);
+  return update(tripRef, tripData);
+};
 
-  if (!newTripId) {
-    throw new Error("Failed to generate new trip ID.");
-  }
+export const deleteTrip = async (userId: string, tripId: string) => {
+  // Remove the trip itself
+  const tripRef = ref(db, `/trips/${tripId}`);
+  await remove(tripRef);
 
-  await update(newTripRef, { ...tripData, userId: userId, items: {} });
-
-  // Update user's trips array
+  // Remove the trip from the user's list of trips
   const userTripsRef = ref(db, `/users/${userId}/trips`);
   const snapshot = await new Promise<any>((resolve) => {
     onValue(userTripsRef, (snap) => {
       resolve(snap);
-    });
+    }, { onlyOnce: true });
   });
   const currentTrips = snapshot.val() || [];
-  await update(userTripsRef, [...currentTrips, newTripId]);
-
-  return newTripId;
+  const newTrips = currentTrips.filter((id: string) => id !== tripId);
+  return update(ref(db, `/users/${userId}`), { trips: newTrips });
 };
+
 
 export const getTrip = async (tripId: string): Promise<Trip | null> => {
   const itemRef = ref(db, `/trips/${tripId}`);

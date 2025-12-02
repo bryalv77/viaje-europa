@@ -9,9 +9,21 @@ import { Spinner } from '@/components/ui/spinner';
 import { Input, InputField } from '@/components/ui/input';
 import TripListItem from '@/components/TripListItem';
 import { useTrips } from '@/hooks/useTrips';
+import { useAuth } from '@/hooks/useAuth'; // Added import for useAuth
+import {
+  Select,
+  SelectTrigger,
+  SelectInput,
+  SelectIcon,
+  SelectPortal,
+  SelectBackdrop,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
+import { ChevronDownIcon } from 'lucide-react-native';
 
 export default function TripScreen() {
-  const { tripItems, participants, loading } = useTrips();
+  const { trips, tripItems, participants, loading, currentTripId, setCurrentTripId, loadingTripId } = useTrips();
   const [sortedItems, setSortedItems] = useState<TripItem[]>([]);
   const [filteredItems, setFilteredItems] = useState<TripItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -23,6 +35,8 @@ export default function TripScreen() {
     seconds: number;
   } | null>(null);
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+
 
   useEffect(() => {
     if (tripItems) {
@@ -95,7 +109,37 @@ export default function TripScreen() {
     });
   };
 
-  if (loading) {
+  const currentTrip = trips.find(trip => trip.tripId === currentTripId);
+
+  if (loading || loadingTripId) {
+    return (
+      <Center className="flex-1 bg-gray-50 dark:bg-gray-900">
+        <Spinner size="large" />
+      </Center>
+    );
+  }
+
+  if (!user && !loading) {
+    return (
+      <Center className="flex-1 bg-gray-50 dark:bg-gray-900">
+        <Text>Please log in to view your trips.</Text>
+      </Center>
+    );
+  }
+
+  if (trips.length === 0) {
+    return (
+      <Center className="flex-1 bg-gray-50 dark:bg-gray-900 px-4">
+        <Text className="text-gray-500 dark:text-gray-400 text-center">
+          No trips found. Please create a new trip in the Profile section.
+        </Text>
+      </Center>
+    );
+  }
+
+  if (!currentTripId && trips.length > 0) {
+    // Automatically select the first trip if none is selected
+    setCurrentTripId(trips[0].tripId!);
     return (
       <Center className="flex-1 bg-gray-50 dark:bg-gray-900">
         <Spinner size="large" />
@@ -114,7 +158,26 @@ export default function TripScreen() {
         </Box>
       )}
       <Box className="bg-white px-4 py-2 dark:bg-gray-800">
-        <Input>
+        <Select
+          selectedValue={currentTripId || undefined}
+          onValueChange={(value) => setCurrentTripId(value)}
+        >
+          <SelectTrigger>
+            <SelectInput placeholder="Select a trip" value={currentTrip?.name || 'Select a Trip'} />
+            <SelectIcon className="mr-2">
+              <ChevronDownIcon />
+            </SelectIcon>
+          </SelectTrigger>
+          <SelectPortal>
+            <SelectBackdrop />
+            <SelectContent>
+              {trips.map((trip) => (
+                <SelectItem key={trip.tripId} label={trip.name} value={trip.tripId!} />
+              ))}
+            </SelectContent>
+          </SelectPortal>
+        </Select>
+        <Input className="mt-2">
           <InputField
             placeholder="Search..."
             value={searchQuery}
@@ -122,10 +185,16 @@ export default function TripScreen() {
           />
         </Input>
       </Box>
-      {filteredItems.length === 0 ? (
+      {filteredItems.length === 0 && searchQuery !== '' ? (
         <View className="flex-1 items-center justify-center mt-10">
           <Text className="text-gray-500 dark:text-gray-400">
-            No se encontraron elementos.
+            No se encontraron elementos que coincidan con la búsqueda.
+          </Text>
+        </View>
+      ) : filteredItems.length === 0 ? (
+        <View className="flex-1 items-center justify-center mt-10">
+          <Text className="text-gray-500 dark:text-gray-400">
+            No hay elementos en este viaje. Agrega uno nuevo desde la vista de tu viaje.
           </Text>
         </View>
       ) : (

@@ -8,6 +8,7 @@ import {
 import { useAuth } from './useAuth';
 import { getTrips, getTripItemsFromTrip } from '@/api/firebase';
 import { ParticipantObject, Trip, TripItem } from '@/types';
+import { useCurrentTrip } from './useCurrentTrip';
 
 interface TripsContextType {
   trips: Trip[];
@@ -16,6 +17,9 @@ interface TripsContextType {
   error: Error | null;
   participants: ParticipantObject;
   refetch: () => void;
+  currentTripId: string | null;
+  setCurrentTripId: (tripId: string | null) => void;
+  loadingTripId: boolean;
 }
 
 const TripsContext = createContext<TripsContextType | undefined>(undefined);
@@ -30,6 +34,7 @@ const parseDate = (dateStr: string, timeStr: string): Date | undefined => {
 
 export function TripsProvider({ children }: PropsWithChildren) {
   const { user } = useAuth();
+  const { currentTripId, setCurrentTripId, loading: loadingTripId } = useCurrentTrip();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [tripItems, setTripItems] = useState<TripItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,25 +55,26 @@ export function TripsProvider({ children }: PropsWithChildren) {
       const userTrips = await getTrips(user.uid);
       setTrips(userTrips);
 
-      const allTripItems: TripItem[] = [];
-      let allParticipants: ParticipantObject = {};
-      for (const trip of userTrips) {
-        if (trip.id) {
-          const items = await getTripItemsFromTrip(trip.id);
-          const itemsWithDates = items.map((item) => ({
-            ...item,
-            tripId: trip.id,
-            startDate: parseDate(item.initial_date, item.initial_time),
-            endDate: parseDate(item.end_date, item.end_time),
-          }));
-          allTripItems.push(...itemsWithDates);
+      if (currentTripId) {
+        const items = await getTripItemsFromTrip(currentTripId);
+        const currentTrip = userTrips.find(trip => trip.id === currentTripId);
+        const itemsWithDates = items.map((item) => ({
+          ...item,
+          tripId: currentTripId,
+          startDate: parseDate(item.initial_date, item.initial_time),
+          endDate: parseDate(item.end_date, item.end_time),
+        }));
+        setTripItems(itemsWithDates);
+        if (currentTrip?.participants) {
+          setParticipants(currentTrip.participants);
+        } else {
+          setParticipants({});
         }
-        if (trip.participants) {
-          allParticipants = { ...allParticipants, ...trip.participants };
-        }
+      } else {
+        setTripItems([]);
+        setParticipants({});
       }
-      setTripItems(allTripItems);
-      setParticipants(allParticipants);
+
       setError(null);
     } catch (e: any) {
       setError(e);
@@ -79,7 +85,7 @@ export function TripsProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     fetchTripsAndItems();
-  }, [user]);
+  }, [user, currentTripId]);
 
   const value = {
     trips,
@@ -88,6 +94,9 @@ export function TripsProvider({ children }: PropsWithChildren) {
     error,
     participants,
     refetch: fetchTripsAndItems,
+    currentTripId,
+    setCurrentTripId,
+    loadingTripId
   };
 
   return (

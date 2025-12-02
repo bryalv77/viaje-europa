@@ -39,10 +39,8 @@ export interface UserData {
 }
 
 export interface Trip {
-  id?: string; // Optional because it's added by getTrip and not always present when creating
+  tripId: string; // Optional because it's added by getTrip and not always present when creating
   name: string;
-  description: string;
-  userId: string;
   items?: { [key: string]: TripItem };
   participants?: ParticipantObject;
 }
