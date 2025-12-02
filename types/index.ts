@@ -1,5 +1,5 @@
 export interface TripItem {
-  id: number;
+  id: string;
   initial_date: string;
   initial_time: string;
   end_date: string;
@@ -21,6 +21,7 @@ export interface TripItem {
   payed_price: string;
   price_cecy: string;
   payed_price_cecy: string;
+  tripId?: string;
 }
 
 export interface TripItemObject {
@@ -36,10 +37,14 @@ export interface UserData {
 }
 
 export interface Trip {
+  id?: string; // Optional because it's added by getTrip and not always present when creating
+  name: string;
+  description: string;
+  userId: string;
   items?: { [key: string]: TripItem };
-  participants: ParticipantObject;
-  tripId: string;
+  participants?: ParticipantObject;
 }
+
 
 export type ParticipantObject = {
   [key: string]: Participant;

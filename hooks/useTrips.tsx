@@ -13,8 +13,8 @@ interface TripsContextType {
   trips: Trip[];
   tripItems: TripItem[];
   loading: boolean;
-  participants: ParticipantObject;
   error: Error | null;
+  participants: ParticipantObject;
   refetch: () => void;
 }
 
@@ -23,10 +23,10 @@ const TripsContext = createContext<TripsContextType | undefined>(undefined);
 export function TripsProvider({ children }: PropsWithChildren) {
   const { user } = useAuth();
   const [trips, setTrips] = useState<Trip[]>([]);
-  const [participants, setParticipants] = useState<ParticipantObject>({});
   const [tripItems, setTripItems] = useState<TripItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [participants, setParticipants] = useState<ParticipantObject>({});
 
   const fetchTripsAndItems = async () => {
     if (!user) {
@@ -43,13 +43,22 @@ export function TripsProvider({ children }: PropsWithChildren) {
       setTrips(userTrips);
 
       const allTripItems: TripItem[] = [];
+      let allParticipants: ParticipantObject = {};
       for (const trip of userTrips) {
-        setParticipants(trip.participants)
-        const items = await getTripItemsFromTrip(trip.tripId);
-        allTripItems.push(...items);
+        if (trip.id) {
+          const items = await getTripItemsFromTrip(trip.id);
+          const itemsWithTripId = items.map((item) => ({
+            ...item,
+            tripId: trip.id,
+          }));
+          allTripItems.push(...itemsWithTripId);
+        }
+        if (trip.participants) {
+          allParticipants = { ...allParticipants, ...trip.participants };
+        }
       }
       setTripItems(allTripItems);
-
+      setParticipants(allParticipants);
       setError(null);
     } catch (e: any) {
       setError(e);

@@ -10,7 +10,7 @@ import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { useColorScheme } from '@/components/useColorScheme';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { TripsProvider } from '@/hooks/useTrips';
 
@@ -23,7 +23,6 @@ function Layout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
   });
-  const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
@@ -32,14 +31,13 @@ function Layout() {
 
   useEffect(() => {
     if (!fontsLoaded || authLoading) return;
-    const inAuthGroup = segments[0] === '(auth)';
-    if (!user && !inAuthGroup) {
+    if (!user) {
       router.replace('/(auth)/login');
-    } else if (user && inAuthGroup) {
+    } else {
       router.replace('/(tabs)/trip');
     }
     SplashScreen.hideAsync();
-  }, [user, authLoading, fontsLoaded, segments, router]);
+  }, [user, authLoading, fontsLoaded, router]);
 
   if (!fontsLoaded || authLoading) {
     return null;
@@ -49,7 +47,7 @@ function Layout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: true }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen
           name="modal"
           options={() => ({

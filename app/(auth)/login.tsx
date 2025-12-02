@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Keyboard, TouchableWithoutFeedback, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 
 import { useAuth } from '@/hooks/useAuth';
 import { Center } from '@/components/ui/center';
@@ -26,8 +27,18 @@ export default function LoginScreen() {
   };
 
   return (
-    <Center className="flex-1 bg-gray-50 dark:bg-gray-900">
-      <Box className="p-8 w-full max-w-md">
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1 bg-gray-50 dark:bg-gray-900"
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <Center className="flex-1">
+            <Box className="p-8 w-full max-w-md py-12">
         <Heading className="text-3xl font-bold text-center">
           Bienvenido
         </Heading>
@@ -44,7 +55,6 @@ export default function LoginScreen() {
             </FormControlLabel>
             <Input>
               <InputField
-                className="rounded-lg bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 p-4"
                 placeholder="tu@email.com"
                 value={email}
                 onChangeText={setEmail}
@@ -61,7 +71,6 @@ export default function LoginScreen() {
             </FormControlLabel>
             <Input>
               <InputField
-                className="rounded-lg bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 p-4"
                 placeholder="********"
                 value={password}
                 onChangeText={setPassword}
@@ -98,6 +107,9 @@ export default function LoginScreen() {
           </AlertDialogContent>
         </AlertDialog>
       )}
-    </Center>
+          </Center>
+        </ScrollView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }

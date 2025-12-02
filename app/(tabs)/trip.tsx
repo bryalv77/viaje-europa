@@ -48,7 +48,9 @@ export default function TripScreen() {
     }
 
     const calculateCountdown = () => {
-      const eventDate = new Date(`${nextEvent['initial_date']} ${nextEvent.initial_time}`);
+      const eventDate = new Date(
+        `${nextEvent['initial_date']} ${nextEvent.initial_time}`
+      );
       const now = new Date();
       const difference = eventDate.getTime() - now.getTime();
 
@@ -56,7 +58,8 @@ export default function TripScreen() {
         setCountdown(null);
         const now = new Date();
         const futureEvent = sortedItems.find(
-          (item) => new Date(`${item['initial_date']} ${item.initial_time}`) > now
+          (item) =>
+            new Date(`${item['initial_date']} ${item.initial_time}`) > now
         );
         setNextEvent(futureEvent || null);
         return;
@@ -71,7 +74,7 @@ export default function TripScreen() {
     };
 
     calculateCountdown();
-    const interval = setInterval(calculateCountdown, 1000); 
+    const interval = setInterval(calculateCountdown, 1000);
 
     return () => clearInterval(interval);
   }, [nextEvent, sortedItems]);
@@ -93,7 +96,7 @@ export default function TripScreen() {
   const handleItemPress = (item: TripItem) => {
     router.push({
       pathname: '/modal',
-      params: { ...item } as any,
+      params: { ...item, tripId: item.tripId } as any,
     });
   };
 
@@ -124,19 +127,25 @@ export default function TripScreen() {
           />
         </Input>
       </Box>
-      {
-        filteredItems.length === 0 ? (
-          <View className="flex-1 items-center justify-center mt-10">
-            <Text className="text-gray-500 dark:text-gray-400">
-              No se encontraron elementos.
-            </Text>
-          </View>
-        ) : filteredItems.map((item => (
-          <TripListItem key={item.id} item={item} onPress={() => handleItemPress(item)} participants={participants} />
-        ) ))
-      }
+      {filteredItems.length === 0 ? (
+        <View className="flex-1 items-center justify-center mt-10">
+          <Text className="text-gray-500 dark:text-gray-400">
+            No se encontraron elementos.
+          </Text>
+        </View>
+      ) : (
+        filteredItems.map((item) => (
+          <TripListItem
+            key={item.id}
+            item={item}
+            onPress={() => handleItemPress(item)}
+            participants={participants}
+          />
+        ))
+      )}
     </ScrollView>
   );
 }
+
 
 

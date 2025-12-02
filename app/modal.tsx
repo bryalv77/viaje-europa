@@ -11,12 +11,37 @@ import { Text } from '@/components/ui/text';
 import { Input, InputField } from '@/components/ui/input';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
-import { AlertDialog, AlertDialogBackdrop, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader } from '@/components/ui/alert-dialog';
+import {
+  AlertDialog,
+  AlertDialogBackdrop,
+  AlertDialogBody,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+} from '@/components/ui/alert-dialog';
 import { HStack } from '@/components/ui/hstack';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import {
+  Select,
+  SelectTrigger,
+  SelectInput,
+  SelectIcon,
+  SelectPortal,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicatorWrapper,
+  SelectDragIndicator,
+  SelectItem,
+} from '@/components/ui/select';
 
 import { CheckIcon, ChevronDownIcon } from '@/components/ui/icon';
-import { Checkbox, CheckboxIcon, CheckboxIndicator, CheckboxLabel } from '@/components/ui/checkbox';
+import {
+  Checkbox,
+  CheckboxIcon,
+  CheckboxIndicator,
+  CheckboxLabel,
+} from '@/components/ui/checkbox';
+import { useTrips } from '@/hooks/useTrips';
 
 const FormSection: React.FC<{ title: string; children: React.ReactNode }> = ({
   title,
@@ -60,6 +85,10 @@ export default function ModalScreen() {
     isEdit ? (params as unknown as TripItem) : {}
   );
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { trips } = useTrips();
+  const [selectedTrip, setSelectedTrip] = useState<string | undefined>(
+    isEdit ? (params.tripId as string) : undefined
+  );
 
   const [participants, setParticipants] = useState<Participant[]>([]);
 
@@ -68,18 +97,24 @@ export default function ModalScreen() {
   };
 
   const handleSave = async () => {
+    const tripId = isEdit ? (params.tripId as string) : selectedTrip;
+    if (!tripId) {
+      // TODO: Show an error to the user to select a trip
+      return;
+    }
     if (isEdit) {
-      await updateTripItem(formState as TripItem);
+      await updateTripItem(tripId, formState as TripItem);
     } else {
-      await addTripItem(formState as Omit<TripItem, 'id'>);
+      await addTripItem(tripId, formState as Omit<TripItem, 'id'>);
     }
     router.back();
   };
 
   const handleDelete = async () => {
-    const id = Array.isArray(params.id) ? params.id[0] : params.id;
-    if (id) {
-      await deleteTripItem(id);
+    const tripId = params.tripId as string;
+    const itemId = params.id as string;
+    if (tripId && itemId) {
+      await deleteTripItem(tripId, itemId);
     }
     router.back();
   };
@@ -89,18 +124,40 @@ export default function ModalScreen() {
       <VStack className="p-6 space-y-8">
         <HStack className="flex items-center gap-4">
           <Pressable onPress={() => router.back()}>
-            <FontAwesome
-                    name="chevron-left"
-                    size={16}
-                    className='text-primary-500'
-                  />
+            <FontAwesome name="chevron-left" size={16} className="text-primary-500" />
           </Pressable>
-        <Heading className="text-2xl font-bold text-center">
-          {isEdit ? 'Editar Evento' : 'Añadir Evento'}
-        </Heading>
+          <Heading className="text-2xl font-bold text-center">
+            {isEdit ? 'Editar Evento' : 'Añadir Evento'}
+          </Heading>
         </HStack>
 
         <FormSection title="General">
+          {!isEdit && (
+            <FormControl>
+              <FormControlLabel>
+                <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Viaje
+                </Text>
+              </FormControlLabel>
+              <Select onValueChange={setSelectedTrip} selectedValue={selectedTrip}>
+                <SelectTrigger>
+                  <SelectInput placeholder="Selecciona un viaje" />
+                  <SelectIcon as={ChevronDownIcon} />
+                </SelectTrigger>
+                <SelectPortal>
+                  <SelectBackdrop />
+                  <SelectContent>
+                    <SelectDragIndicatorWrapper>
+                      <SelectDragIndicator />
+                    </SelectDragIndicatorWrapper>
+                    {trips.map((trip) => (
+                      <SelectItem key={trip.id} label={trip.name} value={trip.id!} />
+                    ))}
+                  </SelectContent>
+                </SelectPortal>
+              </Select>
+            </FormControl>
+          )}
           <FormInput
             label="type"
             value={formState.type || ''}
@@ -111,19 +168,21 @@ export default function ModalScreen() {
             value={formState.description || ''}
             onChangeText={(v) => handleChange('description', v)}
           />
-      
-                {
-                  participants.map(participant => (
-                     <Checkbox value={participant.participantId} isChecked={formState.participants?.includes(participant.participantId)} size="md">
-                      {/* <CheckboxIndicator>
+
+          {participants.map((participant) => (
+            <Checkbox
+              value={participant.participantId}
+              isChecked={formState.participants?.includes(
+                participant.participantId
+              )}
+              size="md"
+            >
+              {/* <CheckboxIndicator>
                         <CheckboxIcon as={CheckIcon} />
                       </CheckboxIndicator> */}
-                      <CheckboxLabel>{participant.name}</CheckboxLabel>
-                    </Checkbox>
-                    
-                  ))
-                }
-             
+              <CheckboxLabel>{participant.name}</CheckboxLabel>
+            </Checkbox>
+          ))}
         </FormSection>
 
         <FormSection title="Fechas y Horas">
@@ -148,15 +207,30 @@ export default function ModalScreen() {
             onChangeText={(v) => handleChange('end_time', v)}
           />
         </FormSection>
-        
+
         <FormSection title="Ubicación">
-            <FormInput label="Lugar Inicio" value={formState.initial_place || ""} onChangeText={(v) => handleChange('initial_place', v)} />
-            <FormInput label="Lugar Fin" value={formState.final_place || ""} onChangeText={(v) => handleChange('final_place', v)} />
-            <FormInput label="Localización (URL)" value={formState.maps_url || ""} onChangeText={(v) => handleChange('maps_url', v)} />
+          <FormInput
+            label="Lugar Inicio"
+            value={formState.initial_place || ''}
+            onChangeText={(v) => handleChange('initial_place', v)}
+          />
+          <FormInput
+            label="Lugar Fin"
+            value={formState.final_place || ''}
+            onChangeText={(v) => handleChange('final_place', v)}
+          />
+          <FormInput
+            label="Localización (URL)"
+            value={formState.maps_url || ''}
+            onChangeText={(v) => handleChange('maps_url', v)}
+          />
         </FormSection>
 
         <Box className="mt-8">
-          <Button onPress={handleSave} className="bg-primary-500 rounded-full">
+          <Button
+            onPress={handleSave}
+            className="bg-primary-500 rounded-full"
+          >
             <ButtonText className="text-white font-bold py-2">
               {isEdit ? 'Guardar Cambios' : 'Añadir Evento'}
             </ButtonText>
@@ -168,7 +242,9 @@ export default function ModalScreen() {
               onPress={() => setShowDeleteDialog(true)}
               className="mt-4"
             >
-              <ButtonText className="text-red-500">Eliminar Evento</ButtonText>
+              <ButtonText className="text-red-500">
+                Eliminar Evento
+              </ButtonText>
             </Button>
           )}
         </Box>
