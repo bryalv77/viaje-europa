@@ -11,7 +11,7 @@ export interface TripItem {
   participants: string[];
   info: string;
   maps_url: string;
-  geolocatition?: string;
+  geolocation?: string;
   flight: string;
   reservation: string;
   hand_equipment: string;

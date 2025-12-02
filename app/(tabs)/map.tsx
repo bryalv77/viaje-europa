@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { View, Alert, Modal, Dimensions, TouchableOpacity, Platform, ScrollView, Linking } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Modal, Dimensions, TouchableOpacity, StyleSheet, useColorScheme, Linking } from 'react-native';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { TripItem } from '@/types';
 import { useRouter } from 'expo-router';
 import { Box } from '@/components/ui/box';
@@ -9,23 +10,16 @@ import { Button, ButtonText } from '@/components/ui/button';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Spinner } from '@/components/ui/spinner';
-import {
-  Eye,
-  MapPin,
-  ExternalLink,
-  Plane,
-  Train,
-  Bed,
-  Ticket,
-  Info
-} from 'lucide-react-native';
+import { Eye, MapPin, Plane, Train, Bed, Ticket, Info, X } from 'lucide-react-native';
 import { useTrips } from '@/hooks/useTrips';
+import { mapStyle } from '@/constants/mapStyle';
 
 const { width, height } = Dimensions.get('window');
 
 const getIconForType = (type: string) => {
   switch (type) {
     case 'Vuelo':
+    case 'flight':
       return Plane;
     case 'Tren':
       return Train;
@@ -41,44 +35,28 @@ const getIconForType = (type: string) => {
 const getColorForType = (type: string) => {
   switch (type) {
     case 'Vuelo':
-      return '#ef4444';
+    case 'flight':
+      return '#ef4444'; // red-500
     case 'Tren':
-      return '#3b82f6';
+      return '#3b82f6'; // blue-500
     case 'Hotel':
-      return '#22c55e';
+      return '#22c55e'; // green-500
     case 'Actividad':
-      return '#6b7280';
+      return '#6b7280'; // gray-500
     default:
-      return '#6b7280';
+      return '#6b7280'; // gray-500
   }
 };
 
-const parseGeolocation = (geolocatition?: string): { latitude: number; longitude: number } | null => {
-  if (!geolocatition) return null;
+const parseGeolocation = (geolocation?: string): { latitude: number; longitude: number } | null => {
+  if (!geolocation) return null;
 
-  try {
-    // Try to parse as JSON array [lat, lng] or {lat: x, lng: y}
-    const parsed = JSON.parse(geolocatition);
-    if (Array.isArray(parsed) && parsed.length >= 2) {
-      return { latitude: parsed[0], longitude: parsed[1] };
-    } else if (parsed.latitude && parsed.longitude) {
-      return { latitude: parsed.latitude, longitude: parsed.longitude };
-    } else if (parsed.lat && parsed.lng) {
-      return { latitude: parsed.lat, longitude: parsed.lng };
-    }
-  } catch (e) {
-    // If JSON parsing fails, try to extract coordinates from string like "lat,lng"
-    const coords = geolocatition.split(',').map(s => parseFloat(s.trim()));
-    if (coords.length >= 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
-      return { latitude: coords[0], longitude: coords[1] };
-    }
+  const coords = geolocation.split(',').map(s => parseFloat(s.trim()));
+  if (coords.length >= 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+    return { latitude: coords[0], longitude: coords[1] };
   }
 
   return null;
-};
-
-const createGoogleMapsUrl = (coords: { latitude: number; longitude: number }) => {
-  return `https://www.google.com/maps/search/?api=1&query=${coords.latitude},${coords.longitude}`;
 };
 
 interface MapMarker {
@@ -96,15 +74,17 @@ export default function MapScreen() {
   const [markers, setMarkers] = useState<MapMarker[]>([]);
   const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
   const [showCallout, setShowCallout] = useState(false);
+  const [initialRegion, setInitialRegion] = useState<any>(null);
   const router = useRouter();
+  const mapRef = useRef<MapView>(null);
+  const colorScheme = useColorScheme();
 
   useEffect(() => {
     if (tripItems) {
-      // Process items into markers
       const itemsWithCoords = tripItems
         .map(item => ({
           ...item,
-          coords: parseGeolocation(item.geolocatition)
+          coords: parseGeolocation(item.geolocation),
         }))
         .filter(item => item.coords);
 
@@ -115,10 +95,28 @@ export default function MapScreen() {
         description: `${item.type} • ${item['initial_date']}`,
         type: item.type,
         location: item['initial_place'],
-        item: item
+        item: item,
       }));
 
       setMarkers(mapMarkers);
+
+      if (mapMarkers.length > 0) {
+        // Calculate bounding box
+        const latitudes = mapMarkers.map(m => m.coordinates.latitude);
+        const longitudes = mapMarkers.map(m => m.coordinates.longitude);
+        const minLat = Math.min(...latitudes);
+        const maxLat = Math.max(...latitudes);
+        const minLng = Math.min(...longitudes);
+        const maxLng = Math.max(...longitudes);
+
+        const region = {
+          latitude: (minLat + maxLat) / 2,
+          longitude: (minLng + maxLng) / 2,
+          latitudeDelta: (maxLat - minLat) * 1.5 || 0.02,
+          longitudeDelta: (maxLng - minLng) * 1.5 || 0.02,
+        };
+        setInitialRegion(region);
+      }
     }
   }, [tripItems]);
 
@@ -148,25 +146,15 @@ export default function MapScreen() {
         animationType="fade"
         onRequestClose={() => setShowCallout(false)}
       >
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            justifyContent: 'center',
-            alignItems: 'center'
-          }}
-        >
-          <TouchableOpacity
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0
-            }}
-            onPress={() => setShowCallout(false)}
-          />
+        <View style={styles.modalContainer}>
+          <TouchableOpacity style={styles.modalBackdrop} onPress={() => setShowCallout(false)} />
           <Box className="w-80 max-w-90% bg-white dark:bg-gray-800 rounded-lg p-4 m-4">
+            <TouchableOpacity
+              onPress={() => setShowCallout(false)}
+              style={styles.closeButton}
+            >
+              <X size={20} color={colorScheme === 'dark' ? 'white' : 'black'} />
+            </TouchableOpacity>
             <VStack space="sm">
               <Text className="font-bold text-base">{selectedMarker.title}</Text>
               <Text className="text-sm text-gray-600 dark:text-gray-400">
@@ -178,18 +166,12 @@ export default function MapScreen() {
                 </Text>
               )}
               <HStack className="mt-3 justify-end" space="md">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onPress={() => setShowCallout(false)}
-                >
-                  <ButtonText>Cerrar</ButtonText>
-                </Button>
-                <Button
-                  size="sm"
-                  variant="solid"
-                  onPress={handleViewDetails}
-                >
+                {selectedMarker.item.file && (
+                  <Button size="sm" variant="outline" onPress={() => Linking.openURL(selectedMarker.item.file!)}>
+                    <ButtonText>Abrir Archivo</ButtonText>
+                  </Button>
+                )}
+                <Button size="sm" variant="solid" onPress={handleViewDetails}>
                   <Eye size={14} color="white" />
                   <ButtonText className="ml-2">Ver Detalles</ButtonText>
                 </Button>
@@ -205,9 +187,7 @@ export default function MapScreen() {
     return (
       <Center className="flex-1 bg-gray-50 dark:bg-gray-900">
         <Spinner size="large" />
-        <Text className="mt-4 text-gray-600 dark:text-gray-400">
-          Cargando mapa del viaje...
-        </Text>
+        <Text className="mt-4 text-gray-600 dark:text-gray-400">Cargando mapa del viaje...</Text>
       </Center>
     );
   }
@@ -215,104 +195,11 @@ export default function MapScreen() {
   if (markers.length === 0) {
     return (
       <Center className="flex-1 bg-gray-50 dark:bg-gray-900">
-        <Box className="p-8">
+        <Box className="p-8 items-center">
           <MapPin size={48} color="#0ea5e9" />
-          <Text className="text-xl font-bold mt-4 mb-2 text-center">
-            Sin ubicaciones GPS
-          </Text>
+          <Text className="text-xl font-bold mt-4 mb-2 text-center">Sin ubicaciones GPS</Text>
           <Text className="text-gray-600 dark:text-gray-400 text-center">
-            No se encontraron coordenadas GPS para los viajes.
-            Asegúrate de agregar datos de geolocalización a tus viajes.
-          </Text>
-        </Box>
-      </Center>
-    );
-  }
-
-  const renderLocationCard = (item: TripItem, coords: { latitude: number; longitude: number }) => (
-    <TouchableOpacity
-      key={item.id}
-      onPress={() => handleMarkerPress({
-        id: item.id,
-        coordinates: coords,
-        title: item.description,
-        description: `${item.type} • ${item['initial_date']}`,
-        type: item.type,
-        location: item.initial_place,
-        item
-      })}
-      className="mb-3 mx-4"
-    >
-      <Box className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-        <HStack className="items-start space-3">
-          <View style={{
-            backgroundColor: getColorForType(item.type),
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
-            {React.createElement(getIconForType(item.type), {
-              size: 20,
-              color: "white"
-            })}
-          </View>
-
-          <VStack className="flex-1">
-            <Text className="font-bold text-base">{item.description}</Text>
-            <Text className="text-sm text-gray-600 dark:text-gray-400">
-              {item.type} • {item['initial_date']}
-            </Text>
-            {item.initial_place && (
-              <Text className="text-sm text-gray-500 dark:text-gray-300 mt-1">
-                📍 {item.initial_place}
-              </Text>
-            )}
-            <Text className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-              🌐 {coords.latitude.toFixed(4)}, {coords.longitude.toFixed(4)}
-            </Text>
-          </VStack>
-
-          <VStack space="sm">
-            <TouchableOpacity
-              onPress={() => Linking.openURL(createGoogleMapsUrl(coords))}
-              className="p-2 bg-blue-100 dark:bg-blue-900 rounded-full"
-            >
-              <ExternalLink size={14} color="#2563eb" />
-            </TouchableOpacity>
-            {item.maps_url && (
-              <TouchableOpacity
-                onPress={() => Linking.openURL(item.maps_url)}
-                className="p-2 bg-green-100 dark:bg-green-900 rounded-full"
-              >
-                <MapPin size={14} color="#22c55e" />
-              </TouchableOpacity>
-            )}
-          </VStack>
-        </HStack>
-      </Box>
-    </TouchableOpacity>
-  );
-  
-  const itemsWithCoords = tripItems
-  .map(item => ({
-    ...item,
-    coords: parseGeolocation(item.geolocatition)
-  }))
-  .filter(item => item.coords);
-
-  if (itemsWithCoords.length === 0) {
-    return (
-      <Center className="flex-1 bg-gray-50 dark:bg-gray-900">
-        <Box className="p-8">
-          <MapPin size={48} color="#0ea5e9" />
-          <Text className="text-xl font-bold mt-4 mb-2 text-center">
-            Sin ubicaciones GPS
-          </Text>
-          <Text className="text-gray-600 dark:text-gray-400 text-center">
-            No se encontraron coordenadas GPS para los viajes.
-            Asegúrate de agregar datos de geolocalización a tus viajes.
+            No se encontraron coordenadas GPS para los viajes. Asegúrate de agregar datos de geolocalización a tus viajes.
           </Text>
         </Box>
       </Center>
@@ -320,84 +207,124 @@ export default function MapScreen() {
   }
 
   return (
-    <View className="flex-1 bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <Box className="bg-white dark:bg-gray-800 p-4 border-b border-gray-200 dark:border-gray-700">
-        <Text className="text-lg font-bold text-center">
-          🗺️ Mapa del Viaje - {itemsWithCoords.length} Ubicaciones
-        </Text>
-        <Text className="text-sm text-gray-600 dark:text-gray-400 text-center mt-1">
-          Toca para ver detalles • Botones para abrir en Google Maps
-        </Text>
-      </Box>
-
-      {/* Location List */}
-      <ScrollView className="flex-1">
-        {itemsWithCoords.map(item =>
-          renderLocationCard(item, item.coords!)
-        )}
-      </ScrollView>
-
-      {/* Legend */}
-      <View className="bg-white dark:bg-gray-800 rounded-lg p-3 mx-4 mb-4 shadow-lg">
+    <View style={styles.container}>
+      <MapView
+        ref={mapRef}
+        style={styles.map}
+        provider={PROVIDER_GOOGLE}
+        initialRegion={initialRegion}
+        customMapStyle={colorScheme === 'dark' ? mapStyle : []}
+        showsUserLocation
+        showsMyLocationButton
+      >
+        {markers.map(marker => (
+          <Marker
+            key={marker.id}
+            coordinate={marker.coordinates}
+            onPress={() => handleMarkerPress(marker)}
+            tracksViewChanges={false} // Performance optimization
+          >
+            <View style={[styles.markerContainer, { backgroundColor: getColorForType(marker.type) }]}>
+              {React.createElement(getIconForType(marker.type), { size: 16, color: 'white' })}
+            </View>
+          </Marker>
+        ))}
+      </MapView>
+      <View style={styles.legendContainer}>
         <Text className="font-bold text-sm mb-2">🎨 Leyenda</Text>
         <VStack space="sm">
           <HStack className="items-center">
-            <View style={{
-              backgroundColor: '#ef4444',
-              width: 20,
-              height: 20,
-              borderRadius: 10,
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}>
+            <View style={[styles.legendIcon, { backgroundColor: '#ef4444' }]}>
               <Plane size={10} color="white" />
             </View>
-            <Text className="ml-2 text-sm">Vuelo</Text>
+            <Text className="ml-2 text-sm dark:text-gray-200">Vuelo</Text>
           </HStack>
           <HStack className="items-center">
-            <View style={{
-              backgroundColor: '#22c55e',
-              width: 20,
-              height: 20,
-              borderRadius: 10,
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}>
+            <View style={[styles.legendIcon, { backgroundColor: '#22c55e' }]}>
               <Bed size={10} color="white" />
             </View>
-            <Text className="ml-2 text-sm">Hotel</Text>
+            <Text className="ml-2 text-sm dark:text-gray-200">Hotel</Text>
           </HStack>
           <HStack className="items-center">
-            <View style={{
-              backgroundColor: '#3b82f6',
-              width: 20,
-              height: 20,
-              borderRadius: 10,
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}>
+            <View style={[styles.legendIcon, { backgroundColor: '#3b82f6' }]}>
               <Train size={10} color="white" />
             </View>
-            <Text className="ml-2 text-sm">Tren</Text>
+            <Text className="ml-2 text-sm dark:text-gray-200">Tren</Text>
           </HStack>
           <HStack className="items-center">
-            <View style={{
-              backgroundColor: '#6b7280',
-              width: 20,
-              height: 20,
-              borderRadius: 10,
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}>
+            <View style={[styles.legendIcon, { backgroundColor: '#6b7280' }]}>
               <Ticket size={10} color="white" />
             </View>
-            <Text className="ml-2 text-sm">Actividad</Text>
+            <Text className="ml-2 text-sm dark:text-gray-200">Actividad</Text>
+
           </HStack>
         </VStack>
       </View>
-
       {renderCallout()}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+  markerContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderColor: 'white',
+    borderWidth: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  legendContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    padding: 10,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+    elevation: 3,
+  },
+  legendIcon: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    padding: 5,
+    zIndex: 1,
+  },
+});
