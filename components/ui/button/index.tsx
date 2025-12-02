@@ -250,6 +250,30 @@ const buttonIconStyle = tva({
       class:
         'text-typography-0 data-[hover=true]:text-typography-0 data-[active=true]:text-typography-0',
     },
+    {
+      variant: 'outline',
+      action: 'primary',
+      class:
+        'text-primary-500 data-[hover=true]:text-primary-500 data-[active=true]:text-primary-500',
+    },
+    {
+      variant: 'outline',
+      action: 'secondary',
+      class:
+        'text-typography-500 data-[hover=true]:text-primary-600 data-[active=true]:text-typography-700',
+    },
+    {
+      variant: 'outline',
+      action: 'positive',
+      class:
+        'text-primary-500 data-[hover=true]:text-primary-500 data-[active=true]:text-primary-500',
+    },
+    {
+      variant: 'outline',
+      action: 'negative',
+      class:
+        'text-primary-500 data-[hover=true]:text-primary-500 data-[active=true]:text-primary-500',
+    },
   ],
 });
 

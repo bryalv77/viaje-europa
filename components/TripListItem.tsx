@@ -21,7 +21,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Center } from '@/components/ui/center';
 import { VStack } from '@/components/ui/vstack';
 import { Text } from '@/components/ui/text';
-import { Button, ButtonText } from '@/components/ui/button';
+import { Button, ButtonText, ButtonIcon } from '@/components/ui/button';
 import { Divider } from '@/components/ui/divider';
 
 const getIconForType = (type: string) => {
@@ -41,10 +41,15 @@ const getIconForType = (type: string) => {
 };
 
 const handleLink = async (url: string) => {
+
   if (!url) return;
   const supported = await Linking.canOpenURL(url);
   if (supported) {
-    await Linking.openURL(url);
+    try {
+      await Linking.openURL(url);
+    } catch (error) {
+      console.error('Failed to open URL:', error);
+    }
   } else {
     console.log(`Don't know how to open this URL: ${url}`);
   }
@@ -75,7 +80,7 @@ export default function TripListItem({ item, participants, onPress }: TripListIt
               </Text>
             </VStack>
             <Pressable onPress={onPress}>
-              <Edit size={20} color="gray" />
+              <Edit size={20} className='text-gray-500 dark:text-gray-400' />
             </Pressable>
           </HStack>
 
@@ -85,7 +90,7 @@ export default function TripListItem({ item, participants, onPress }: TripListIt
 
           {item.participants &&  participants &&(
             <HStack className="mt-2 items-center">
-              <User size={16} color="gray" />
+              <User size={16} className='text-gray-500 dark:text-gray-400' />
               <Text className="ml-2 text-gray-700 dark:text-gray-300">
                 {item.participants.map(participantId => participants[participantId]?.name).join(', ')}
               </Text>
@@ -93,20 +98,12 @@ export default function TripListItem({ item, participants, onPress }: TripListIt
           )}
 
           {item.info && (
-            <HStack className="mt-2 items-start">
               <Pressable onPress={() => handleLink(item.info)}>
-                <HStack className="items-start">
-                  <ExternalLink
-                    size={16}
-                    color="gray"
-                    style={{ marginTop: 2 }}
-                  />
-                  <Text className="ml-2 flex-1 text-gray-700 dark:text-gray-300">
-                    {item.info}
-                  </Text>
+                <HStack className="items-center gap-2">
+                  <ExternalLink size={16} />
+                  <Text>{item.info} </Text>
                 </HStack>
               </Pressable>
-            </HStack>
           )}
 
           <Divider className="my-2" />
@@ -114,7 +111,7 @@ export default function TripListItem({ item, participants, onPress }: TripListIt
           <HStack className="items-center justify-between">
             {(item.price || item.price_cecy) ? (
               <HStack className="items-center">
-                <DollarSign size={16} color="green" />
+                <DollarSign size={16} className='text-green-600 dark:text-green-400' />
                 <Text className="ml-2 font-bold text-green-600 dark:text-green-400">
                   {item.price || item.price_cecy}
                 </Text>
@@ -128,7 +125,7 @@ export default function TripListItem({ item, participants, onPress }: TripListIt
                   variant="outline"
                   onPress={() => handleLink(item.maps_url)}
                 >
-                  <MapPin size={16} />
+                  <ButtonIcon as={MapPin} />
                   <ButtonText className="ml-2">Mapa</ButtonText>
                 </Button>
               )}
@@ -138,7 +135,7 @@ export default function TripListItem({ item, participants, onPress }: TripListIt
                   variant="outline"
                   onPress={() => handleLink(item.file)}
                 >
-                  <FileText size={16} />
+                  <ButtonIcon as={FileText} />
                   <ButtonText className="ml-2">Archivo</ButtonText>
                 </Button>
               )}

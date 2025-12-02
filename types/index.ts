@@ -22,6 +22,8 @@ export interface TripItem {
   price_cecy: string;
   payed_price_cecy: string;
   tripId?: string;
+  startDate?: Date;
+  endDate?: Date;
 }
 
 export interface TripItemObject {

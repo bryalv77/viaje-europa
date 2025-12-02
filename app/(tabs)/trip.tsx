@@ -27,30 +27,26 @@ export default function TripScreen() {
   useEffect(() => {
     if (tripItems) {
       const sorted = [...tripItems].sort(
-        (a, b) =>
-          new Date(`${a['initial_date']} ${a.initial_time}`).getTime() -
-          new Date(`${b['initial_date']} ${b.initial_time}`).getTime()
+        (a, b) => (a.startDate?.getTime() || 0) - (b.startDate?.getTime() || 0)
       );
       setSortedItems(sorted);
 
       const now = new Date();
       const futureEvent = sorted.find(
-        (item) => new Date(`${item['initial_date']} ${item.initial_time}`) > now
+        (item) => item.startDate && item.startDate > now
       );
       setNextEvent(futureEvent || null);
     }
   }, [tripItems]);
 
   useEffect(() => {
-    if (!nextEvent) {
+    if (!nextEvent || !nextEvent.startDate) {
       setCountdown(null);
       return;
     }
 
     const calculateCountdown = () => {
-      const eventDate = new Date(
-        `${nextEvent['initial_date']} ${nextEvent.initial_time}`
-      );
+      const eventDate = nextEvent.startDate!;
       const now = new Date();
       const difference = eventDate.getTime() - now.getTime();
 
@@ -58,8 +54,7 @@ export default function TripScreen() {
         setCountdown(null);
         const now = new Date();
         const futureEvent = sortedItems.find(
-          (item) =>
-            new Date(`${item['initial_date']} ${item.initial_time}`) > now
+          (item) => item.startDate && item.startDate > now
         );
         setNextEvent(futureEvent || null);
         return;

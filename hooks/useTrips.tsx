@@ -20,6 +20,14 @@ interface TripsContextType {
 
 const TripsContext = createContext<TripsContextType | undefined>(undefined);
 
+const parseDate = (dateStr: string, timeStr: string): Date | undefined => {
+  if (!dateStr || !timeStr) return undefined;
+  const [day, month, year] = dateStr.split('/');
+  const [hours, minutes, seconds] = timeStr.split(':');
+  // Month is 0-indexed in JavaScript Date
+  return new Date(+year, +month - 1, +day, +hours, +minutes, +seconds);
+};
+
 export function TripsProvider({ children }: PropsWithChildren) {
   const { user } = useAuth();
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -47,11 +55,13 @@ export function TripsProvider({ children }: PropsWithChildren) {
       for (const trip of userTrips) {
         if (trip.id) {
           const items = await getTripItemsFromTrip(trip.id);
-          const itemsWithTripId = items.map((item) => ({
+          const itemsWithDates = items.map((item) => ({
             ...item,
             tripId: trip.id,
+            startDate: parseDate(item.initial_date, item.initial_time),
+            endDate: parseDate(item.end_date, item.end_time),
           }));
-          allTripItems.push(...itemsWithTripId);
+          allTripItems.push(...itemsWithDates);
         }
         if (trip.participants) {
           allParticipants = { ...allParticipants, ...trip.participants };
