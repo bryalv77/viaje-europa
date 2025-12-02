@@ -213,29 +213,23 @@ export default function ProfileScreen() {
             <Spinner />
           ) : trips.length > 0 ? (
             trips.map((trip) => (
-              <Card key={trip.id} className="p-4">
+              <Card key={trip.tripId} className="p-4">
                 <VStack space="md">
                   <Heading size="sm">{trip.name}</Heading>
                   <Text>{trip.description}</Text>
                   <HStack space="sm" className="mt-2">
-                    <Button
-                      size="sm"
-                      onPress={() => setCurrentTripId(trip.id!)}
-                      isDisabled={currentTripId === trip.id}
-                    >
-                      <ButtonText>{currentTripId === trip.id ? 'Selected' : 'Select'}</ButtonText>
-                    </Button>
+                   
                     <Button
                       size="sm"
                       variant="outline"
-                      onPress={() => router.push({ pathname: '/trip-form', params: { tripId: trip.id } })}
+                      onPress={() => router.push({ pathname: '/trip-form', params: { tripId: trip.tripId } })}
                     >
                       <ButtonText>Edit</ButtonText>
                     </Button>
                     <Button
                       size="sm"
                       variant="link"
-                      onPress={() => handleDeleteTrip(trip.id!)}
+                      onPress={() => handleDeleteTrip(trip.tripId!)}
                     >
                       <ButtonText className="text-red-500">Delete</ButtonText>
                     </Button>

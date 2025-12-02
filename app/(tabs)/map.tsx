@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Modal, Dimensions, TouchableOpacity, StyleSheet, useColorScheme, Linking } from 'react-native';
+import { View, Modal, Dimensions, TouchableOpacity, useColorScheme, Linking } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { TripItem } from '@/types';
 import { useRouter } from 'expo-router';
@@ -13,8 +13,6 @@ import { Spinner } from '@/components/ui/spinner';
 import { Eye, MapPin, Plane, Train, Bed, Ticket, Info, X } from 'lucide-react-native';
 import { useTrips } from '@/hooks/useTrips';
 import { mapStyle } from '@/constants/mapStyle';
-
-const { width, height } = Dimensions.get('window');
 
 const getIconForType = (type: string) => {
   switch (type) {
@@ -101,7 +99,6 @@ export default function MapScreen() {
       setMarkers(mapMarkers);
 
       if (mapMarkers.length > 0) {
-        // Calculate bounding box
         const latitudes = mapMarkers.map(m => m.coordinates.latitude);
         const longitudes = mapMarkers.map(m => m.coordinates.longitude);
         const minLat = Math.min(...latitudes);
@@ -146,12 +143,12 @@ export default function MapScreen() {
         animationType="fade"
         onRequestClose={() => setShowCallout(false)}
       >
-        <View style={styles.modalContainer}>
-          <TouchableOpacity style={styles.modalBackdrop} onPress={() => setShowCallout(false)} />
-          <Box className="w-80 max-w-90% bg-white dark:bg-gray-800 rounded-lg p-4 m-4">
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <TouchableOpacity className="absolute top-0 left-0 right-0 bottom-0" onPress={() => setShowCallout(false)} />
+          <Box className="w-80 max-w-[90%] bg-white dark:bg-gray-800 rounded-lg p-4 m-4">
             <TouchableOpacity
               onPress={() => setShowCallout(false)}
-              style={styles.closeButton}
+              className="absolute top-2.5 right-2.5 p-1.5 z-10"
             >
               <X size={20} color={colorScheme === 'dark' ? 'white' : 'black'} />
             </TouchableOpacity>
@@ -207,10 +204,11 @@ export default function MapScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1">
       <MapView
         ref={mapRef}
-        style={styles.map}
+        style={{width: Dimensions.get('window').width, height: Dimensions.get('window').height}}
+        className="w-full h-full"
         provider={PROVIDER_GOOGLE}
         initialRegion={initialRegion}
         customMapStyle={colorScheme === 'dark' ? mapStyle : []}
@@ -224,39 +222,38 @@ export default function MapScreen() {
             onPress={() => handleMarkerPress(marker)}
             tracksViewChanges={false} // Performance optimization
           >
-            <View style={[styles.markerContainer, { backgroundColor: getColorForType(marker.type) }]}>
+            <View className="w-8 h-8 rounded-full justify-center items-center border-2 border-white shadow-lg" style={{ backgroundColor: getColorForType(marker.type) }}>
               {React.createElement(getIconForType(marker.type), { size: 16, color: 'white' })}
             </View>
           </Marker>
         ))}
       </MapView>
-      <View style={styles.legendContainer}>
-        <Text className="font-bold text-sm mb-2">🎨 Leyenda</Text>
+      <View className="absolute bottom-5 left-5 p-2.5 rounded-lg shadow-lg bg-white/90 dark:bg-gray-800/90">
+        <Text className="font-bold text-sm mb-2 dark:text-white">🎨 Leyenda</Text>
         <VStack space="sm">
           <HStack className="items-center">
-            <View style={[styles.legendIcon, { backgroundColor: '#ef4444' }]}>
+            <View className="w-5 h-5 rounded-full justify-center items-center" style={{ backgroundColor: '#ef4444' }}>
               <Plane size={10} color="white" />
             </View>
             <Text className="ml-2 text-sm dark:text-gray-200">Vuelo</Text>
           </HStack>
           <HStack className="items-center">
-            <View style={[styles.legendIcon, { backgroundColor: '#22c55e' }]}>
+            <View className="w-5 h-5 rounded-full justify-center items-center" style={{ backgroundColor: '#22c55e' }}>
               <Bed size={10} color="white" />
             </View>
             <Text className="ml-2 text-sm dark:text-gray-200">Hotel</Text>
           </HStack>
           <HStack className="items-center">
-            <View style={[styles.legendIcon, { backgroundColor: '#3b82f6' }]}>
+            <View className="w-5 h-5 rounded-full justify-center items-center" style={{ backgroundColor: '#3b82f6' }}>
               <Train size={10} color="white" />
             </View>
             <Text className="ml-2 text-sm dark:text-gray-200">Tren</Text>
           </HStack>
           <HStack className="items-center">
-            <View style={[styles.legendIcon, { backgroundColor: '#6b7280' }]}>
+            <View className="w-5 h-5 rounded-full justify-center items-center" style={{ backgroundColor: '#6b7280' }}>
               <Ticket size={10} color="white" />
             </View>
             <Text className="ml-2 text-sm dark:text-gray-200">Actividad</Text>
-
           </HStack>
         </VStack>
       </View>
@@ -264,67 +261,3 @@ export default function MapScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  map: {
-    width: '100%',
-    height: '100%',
-  },
-  markerContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderColor: 'white',
-    borderWidth: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalBackdrop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  legendContainer: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    padding: 10,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-    elevation: 3,
-  },
-  legendIcon: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    padding: 5,
-    zIndex: 1,
-  },
-});
