@@ -8,7 +8,8 @@ import {
   Sun,
   Moon,
   Plus,
-  LogOut
+  LogOut,
+  List,
 } from 'lucide-react-native';
 
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
@@ -91,7 +92,13 @@ export default function TabLayout() {
         options={{
           title: 'Mapa',
           tabBarIcon: ({ color }) => <TabBarIcon Icon={Map} color={color} />,
-          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="summary"
+        options={{
+          title: 'Resumen',
+          tabBarIcon: ({ color }) => <TabBarIcon Icon={List} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -99,7 +106,7 @@ export default function TabLayout() {
         options={{
           title: 'Perfil',
           tabBarIcon: ({ color }) => <TabBarIcon Icon={User} color={color} />,
-          headerLeft: () => (
+          headerRight: () => (
             <Pressable
               onPress={async () => {
                 await logout();

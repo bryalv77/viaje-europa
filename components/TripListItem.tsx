@@ -4,8 +4,6 @@ import { ParticipantObject, TripItem } from '@/types';
 import {
   Edit,
   User,
-  Eye,
-  
   MapPin,
   FileText,
   Plane,
@@ -23,6 +21,7 @@ import { VStack } from '@/components/ui/vstack';
 import { Text } from '@/components/ui/text';
 import { Button, ButtonText, ButtonIcon } from '@/components/ui/button';
 import { Divider } from '@/components/ui/divider';
+import { useColorScheme } from 'nativewind';
 
 const getIconForType = (type: string) => {
   switch (type) {
@@ -41,7 +40,6 @@ const getIconForType = (type: string) => {
 };
 
 const handleLink = async (url: string) => {
-
   if (!url) return;
   const supported = await Linking.canOpenURL(url);
   if (supported) {
@@ -62,6 +60,10 @@ interface TripListItemProps {
 }
 
 export default function TripListItem({ item, participants, onPress }: TripListItemProps) {
+  const { colorScheme } = useColorScheme();
+  const iconColor = colorScheme === 'dark' ? 'white' : '#6b7280';
+  const dollarColor = colorScheme === 'dark' ? '#4ade80' : '#16a34a';
+
   return (
     <View>
       <Box className="m-4 rounded-xl bg-white p-4 shadow-sm dark:bg-gray-800">
@@ -70,7 +72,7 @@ export default function TripListItem({ item, participants, onPress }: TripListIt
             <Center className="mr-4 h-12 w-12 rounded-full bg-primary-100 dark:bg-primary-900">
               {React.createElement(getIconForType(item.type), {
                 size: 24,
-                color: "teal"
+                color: colorScheme === 'dark' ? '#0d9488' : '#14b8a6',
               })}
             </Center>
             <VStack className="flex-1">
@@ -80,7 +82,7 @@ export default function TripListItem({ item, participants, onPress }: TripListIt
               </Text>
             </VStack>
             <Pressable onPress={onPress}>
-              <Edit size={20} className='text-gray-500 dark:text-gray-400' />
+              <Edit size={20} color={iconColor} />
             </Pressable>
           </HStack>
 
@@ -88,9 +90,9 @@ export default function TripListItem({ item, participants, onPress }: TripListIt
             {item['initial_date']} {item.initial_time} - {item['end_date']} {item.end_time}
           </Text>
 
-          {item.participants &&  participants &&(
+          {item.participants && participants && (
             <HStack className="mt-2 items-center">
-              <User size={16} className='text-gray-500 dark:text-gray-400' />
+              <User size={16} color={iconColor} />
               <Text className="ml-2 text-gray-700 dark:text-gray-300">
                 {item.participants.map(participantId => participants[participantId]?.name).join(', ')}
               </Text>
@@ -100,7 +102,7 @@ export default function TripListItem({ item, participants, onPress }: TripListIt
           {item.info && (
               <Pressable onPress={() => handleLink(item.info)}>
                 <HStack className="items-center gap-2">
-                  <ExternalLink size={16} />
+                  <ExternalLink size={16} color={iconColor} />
                   <Text>{item.info} </Text>
                 </HStack>
               </Pressable>
@@ -111,8 +113,8 @@ export default function TripListItem({ item, participants, onPress }: TripListIt
           <HStack className="items-center justify-between">
             {(item.price || item.price_cecy) ? (
               <HStack className="items-center">
-                <DollarSign size={16} className='text-green-600 dark:text-green-400' />
-                <Text className="ml-2 font-bold text-green-600 dark:text-green-400">
+                <DollarSign size={16} color={dollarColor} />
+                <Text className="ml-2 font-bold" style={{ color: dollarColor }}>
                   {item.price || item.price_cecy}
                 </Text>
               </HStack>
@@ -122,20 +124,18 @@ export default function TripListItem({ item, participants, onPress }: TripListIt
               {item.maps_url && (
                 <Button
                   size="xs"
-                  variant="outline"
                   onPress={() => handleLink(item.maps_url)}
                 >
-                  <ButtonIcon as={MapPin} />
+                  <ButtonIcon as={MapPin} color={iconColor} />
                   <ButtonText className="ml-2">Mapa</ButtonText>
                 </Button>
               )}
               {item.file && (
                 <Button
                   size="xs"
-                  variant="outline"
                   onPress={() => handleLink(item.file)}
                 >
-                  <ButtonIcon as={FileText} />
+                  <ButtonIcon as={FileText} color={iconColor} />
                   <ButtonText className="ml-2">Archivo</ButtonText>
                 </Button>
               )}
