@@ -20,7 +20,7 @@ import {
   AlertDialogHeader,
 } from '@/components/ui/alert-dialog';
 import { HStack } from '@/components/ui/hstack';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { ChevronLeft } from 'lucide-react-native';
 import {
   Select,
   SelectTrigger,
@@ -124,7 +124,7 @@ export default function ModalScreen() {
       <VStack className="p-6 space-y-8">
         <HStack className="flex items-center gap-4">
           <Pressable onPress={() => router.back()}>
-            <FontAwesome name="chevron-left" size={16} className="text-primary-500" />
+            <ChevronLeft size={16} className="text-primary-500" />
           </Pressable>
           <Heading className="text-2xl font-bold text-center">
             {isEdit ? 'Editar Evento' : 'Añadir Evento'}

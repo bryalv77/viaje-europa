@@ -9,7 +9,16 @@ import { Button, ButtonText } from '@/components/ui/button';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Spinner } from '@/components/ui/spinner';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import {
+  Eye,
+  MapPin,
+  ExternalLink,
+  Plane,
+  Train,
+  Bed,
+  Ticket,
+  Info
+} from 'lucide-react-native';
 import { useTrips } from '@/hooks/useTrips';
 
 const { width, height } = Dimensions.get('window');
@@ -17,15 +26,15 @@ const { width, height } = Dimensions.get('window');
 const getIconForType = (type: string) => {
   switch (type) {
     case 'Vuelo':
-      return 'plane';
+      return Plane;
     case 'Tren':
-      return 'train';
+      return Train;
     case 'Hotel':
-      return 'bed';
+      return Bed;
     case 'Actividad':
-      return 'ticket';
+      return Ticket;
     default:
-      return 'info-circle';
+      return Info;
   }
 };
 
@@ -181,7 +190,7 @@ export default function MapScreen() {
                   variant="solid"
                   onPress={handleViewDetails}
                 >
-                  <FontAwesome name="eye" size={14} color="white" />
+                  <Eye size={14} color="white" />
                   <ButtonText className="ml-2">Ver Detalles</ButtonText>
                 </Button>
               </HStack>
@@ -207,7 +216,7 @@ export default function MapScreen() {
     return (
       <Center className="flex-1 bg-gray-50 dark:bg-gray-900">
         <Box className="p-8">
-          <FontAwesome name="map-marker" size={48} color="#0ea5e9" />
+          <MapPin size={48} color="#0ea5e9" />
           <Text className="text-xl font-bold mt-4 mb-2 text-center">
             Sin ubicaciones GPS
           </Text>
@@ -244,7 +253,10 @@ export default function MapScreen() {
             justifyContent: 'center',
             alignItems: 'center',
           }}>
-            <FontAwesome name={getIconForType(item.type)} size={20} color="white" />
+            {React.createElement(getIconForType(item.type), {
+              size: 20,
+              color: "white"
+            })}
           </View>
 
           <VStack className="flex-1">
@@ -267,14 +279,14 @@ export default function MapScreen() {
               onPress={() => Linking.openURL(createGoogleMapsUrl(coords))}
               className="p-2 bg-blue-100 dark:bg-blue-900 rounded-full"
             >
-              <FontAwesome name="external-link" size={14} color="#2563eb" />
+              <ExternalLink size={14} color="#2563eb" />
             </TouchableOpacity>
             {item.maps_url && (
               <TouchableOpacity
                 onPress={() => Linking.openURL(item.maps_url)}
                 className="p-2 bg-green-100 dark:bg-green-900 rounded-full"
               >
-                <FontAwesome name="map-marker" size={14} color="#22c55e" />
+                <MapPin size={14} color="#22c55e" />
               </TouchableOpacity>
             )}
           </VStack>
@@ -294,7 +306,7 @@ export default function MapScreen() {
     return (
       <Center className="flex-1 bg-gray-50 dark:bg-gray-900">
         <Box className="p-8">
-          <FontAwesome name="map-marker" size={48} color="#0ea5e9" />
+          <MapPin size={48} color="#0ea5e9" />
           <Text className="text-xl font-bold mt-4 mb-2 text-center">
             Sin ubicaciones GPS
           </Text>
@@ -339,7 +351,7 @@ export default function MapScreen() {
               justifyContent: 'center',
               alignItems: 'center',
             }}>
-              <FontAwesome name="plane" size={10} color="white" />
+              <Plane size={10} color="white" />
             </View>
             <Text className="ml-2 text-sm">Vuelo</Text>
           </HStack>
@@ -352,7 +364,7 @@ export default function MapScreen() {
               justifyContent: 'center',
               alignItems: 'center',
             }}>
-              <FontAwesome name="bed" size={10} color="white" />
+              <Bed size={10} color="white" />
             </View>
             <Text className="ml-2 text-sm">Hotel</Text>
           </HStack>
@@ -365,7 +377,7 @@ export default function MapScreen() {
               justifyContent: 'center',
               alignItems: 'center',
             }}>
-              <FontAwesome name="train" size={10} color="white" />
+              <Train size={10} color="white" />
             </View>
             <Text className="ml-2 text-sm">Tren</Text>
           </HStack>
@@ -378,7 +390,7 @@ export default function MapScreen() {
               justifyContent: 'center',
               alignItems: 'center',
             }}>
-              <FontAwesome name="ticket" size={10} color="white" />
+              <Ticket size={10} color="white" />
             </View>
             <Text className="ml-2 text-sm">Actividad</Text>
           </HStack>

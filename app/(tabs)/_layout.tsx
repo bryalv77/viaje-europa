@@ -1,18 +1,33 @@
 import React, { useEffect } from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Link, Tabs, useRouter } from 'expo-router';
 import { useColorScheme } from 'nativewind';
+import {
+  Plane,
+  Map,
+  User,
+  Sun,
+  Moon,
+  Plus,
+  LogOut
+} from 'lucide-react-native';
 
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { Colors } from '@/constants/Colors';
 import { useAuth } from '@/hooks/useAuth';
 import { Pressable, View } from 'react-native';
 
-function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>['name'];
+function TabBarIcon({
+  Icon,
+  color
+}: {
+  Icon: React.ComponentType<{ size?: number; color?: string }>;
   color: string;
 }) {
-  return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
+  return (
+    <View style={{ marginBottom: -3 }}>
+      <Icon size={28} color={color} />
+    </View>
+  );
 }
 
 export default function TabLayout() {
@@ -30,7 +45,7 @@ export default function TabLayout() {
         name="trip"
         options={{
           title: 'Viaje',
-          tabBarIcon: ({ color }) => <TabBarIcon name="plane" color={color} />,
+          tabBarIcon: ({ color }) => <TabBarIcon Icon={Plane} color={color} />,
           headerRight: () => (
             <View
               style={{
@@ -41,19 +56,25 @@ export default function TabLayout() {
             >
               <Pressable onPress={toggleColorScheme} style={{ marginRight: 20 }}>
                 {({ pressed }) => (
-                  <FontAwesome
-                    name={colorScheme === 'dark' ? 'sun-o' : 'moon-o'}
-                    size={25}
-                    color={Colors[colorScheme ?? 'light'].text}
-                    style={{ opacity: pressed ? 0.5 : 1 }}
-                  />
+                  colorScheme === 'dark' ? (
+                    <Sun
+                      size={25}
+                      color={Colors[colorScheme ?? 'light'].text}
+                      style={{ opacity: pressed ? 0.5 : 1 }}
+                    />
+                  ) : (
+                    <Moon
+                      size={25}
+                      color={Colors[colorScheme ?? 'light'].text}
+                      style={{ opacity: pressed ? 0.5 : 1 }}
+                    />
+                  )
                 )}
               </Pressable>
               <Link href="/modal" asChild>
                 <Pressable>
                   {({ pressed }) => (
-                    <FontAwesome
-                      name="plus"
+                    <Plus
                       size={25}
                       color={Colors[colorScheme ?? 'light'].text}
                       style={{ opacity: pressed ? 0.5 : 1 }}
@@ -69,7 +90,7 @@ export default function TabLayout() {
         name="map"
         options={{
           title: 'Mapa',
-          tabBarIcon: ({ color }) => <TabBarIcon name="map" color={color} />,
+          tabBarIcon: ({ color }) => <TabBarIcon Icon={Map} color={color} />,
           headerShown: false,
         }}
       />
@@ -77,7 +98,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Perfil',
-          tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
+          tabBarIcon: ({ color }) => <TabBarIcon Icon={User} color={color} />,
           headerLeft: () => (
             <Pressable
               onPress={async () => {
@@ -86,8 +107,7 @@ export default function TabLayout() {
               }}
             >
               {({ pressed }) => (
-                <FontAwesome
-                  name="sign-out"
+                <LogOut
                   size={25}
                   color={Colors[colorScheme ?? 'light'].text}
                   className={`ml-4 ${pressed ? 'opacity-50' : 'opacity-100'}`}

@@ -1,12 +1,10 @@
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import '@/global.css';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import {
   DarkTheme,
   DefaultTheme,
   ThemeProvider,
 } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -19,27 +17,19 @@ SplashScreen.preventAutoHideAsync();
 function Layout() {
   const colorScheme = useColorScheme();
   const { user, loading: authLoading } = useAuth();
-  const [fontsLoaded, fontError] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    ...FontAwesome.font,
-  });
   const router = useRouter();
 
   useEffect(() => {
-    if (fontError) throw fontError;
-  }, [fontError]);
-
-  useEffect(() => {
-    if (!fontsLoaded || authLoading) return;
+    if (authLoading) return;
     if (!user) {
       router.replace('/(auth)/login');
     } else {
       router.replace('/(tabs)/trip');
     }
     SplashScreen.hideAsync();
-  }, [user, authLoading, fontsLoaded, router]);
+  }, [user, authLoading, router]);
 
-  if (!fontsLoaded || authLoading) {
+  if (authLoading) {
     return null;
   }
 

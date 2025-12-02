@@ -1,7 +1,21 @@
 import React from 'react';
 import { Linking, Pressable, View } from 'react-native';
 import { ParticipantObject, TripItem } from '@/types';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import {
+  Edit,
+  User,
+  Eye,
+  
+  MapPin,
+  FileText,
+  Plane,
+  Train,
+  Bed,
+  Ticket,
+  ExternalLink,
+  Info,
+  DollarSign
+} from 'lucide-react-native';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Center } from '@/components/ui/center';
@@ -9,20 +23,20 @@ import { VStack } from '@/components/ui/vstack';
 import { Text } from '@/components/ui/text';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Divider } from '@/components/ui/divider';
-import { Link } from 'expo-router';
 
 const getIconForType = (type: string) => {
   switch (type) {
     case 'Vuelo':
-      return 'plane';
+    case 'flight':
+      return Plane;
     case 'Tren':
-      return 'train';
+      return Train;
     case 'Hotel':
-      return 'bed';
+      return Bed;
     case 'Actividad':
-      return 'ticket';
+      return Ticket;
     default:
-      return 'info-circle';
+      return Info;
   }
 };
 
@@ -49,11 +63,10 @@ export default function TripListItem({ item, participants, onPress }: TripListIt
         <VStack space="md">
           <HStack className="items-center">
             <Center className="mr-4 h-12 w-12 rounded-full bg-primary-100 dark:bg-primary-900">
-              <FontAwesome
-                name={getIconForType(item.type)}
-                size={24}
-                color="teal"
-              />
+              {React.createElement(getIconForType(item.type), {
+                size: 24,
+                color: "teal"
+              })}
             </Center>
             <VStack className="flex-1">
               <Text className="text-lg font-bold">{item.description}</Text>
@@ -62,7 +75,7 @@ export default function TripListItem({ item, participants, onPress }: TripListIt
               </Text>
             </VStack>
             <Pressable onPress={onPress}>
-              <FontAwesome name="edit" size={20} color="gray" />
+              <Edit size={20} color="gray" />
             </Pressable>
           </HStack>
 
@@ -72,7 +85,7 @@ export default function TripListItem({ item, participants, onPress }: TripListIt
 
           {item.participants &&  participants &&(
             <HStack className="mt-2 items-center">
-              <FontAwesome name="user" size={16} color="gray" />
+              <User size={16} color="gray" />
               <Text className="ml-2 text-gray-700 dark:text-gray-300">
                 {item.participants.map(participantId => participants[participantId]?.name).join(', ')}
               </Text>
@@ -83,8 +96,7 @@ export default function TripListItem({ item, participants, onPress }: TripListIt
             <HStack className="mt-2 items-start">
               <Pressable onPress={() => handleLink(item.info)}>
                 <HStack className="items-start">
-                  <FontAwesome
-                    name="link"
+                  <ExternalLink
                     size={16}
                     color="gray"
                     style={{ marginTop: 2 }}
@@ -102,7 +114,7 @@ export default function TripListItem({ item, participants, onPress }: TripListIt
           <HStack className="items-center justify-between">
             {(item.price || item.price_cecy) ? (
               <HStack className="items-center">
-                <FontAwesome name="money" size={16} color="green" />
+                <DollarSign size={16} color="green" />
                 <Text className="ml-2 font-bold text-green-600 dark:text-green-400">
                   {item.price || item.price_cecy}
                 </Text>
@@ -116,7 +128,7 @@ export default function TripListItem({ item, participants, onPress }: TripListIt
                   variant="outline"
                   onPress={() => handleLink(item.maps_url)}
                 >
-                  <FontAwesome name="map-marker" size={16} />
+                  <MapPin size={16} />
                   <ButtonText className="ml-2">Mapa</ButtonText>
                 </Button>
               )}
@@ -126,7 +138,7 @@ export default function TripListItem({ item, participants, onPress }: TripListIt
                   variant="outline"
                   onPress={() => handleLink(item.file)}
                 >
-                  <FontAwesome name="file-o" size={16} />
+                  <FileText size={16} />
                   <ButtonText className="ml-2">Archivo</ButtonText>
                 </Button>
               )}

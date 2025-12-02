@@ -7,7 +7,8 @@
       "Bash(npx expo uninstall:*)",
       "Bash(yarn remove:*)",
       "WebFetch(domain:docs.expo.dev)",
-      "Bash(yarn add:*)"
+      "Bash(yarn add:*)",
+      "Bash(npm uninstall:*)"
     ],
     "deny": [],
     "ask": []
