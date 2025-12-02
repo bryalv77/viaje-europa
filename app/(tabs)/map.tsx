@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Alert, Modal, Dimensions, TouchableOpacity, Platform, ScrollView, Linking } from 'react-native';
 import { TripItem } from '@/types';
-import { getTripItems } from '@/api/firebase';
 import { useRouter } from 'expo-router';
 import { Box } from '@/components/ui/box';
 import { Center } from '@/components/ui/center';
@@ -11,6 +10,7 @@ import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Spinner } from '@/components/ui/spinner';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useTrips } from '@/hooks/useTrips';
 
 const { width, height } = Dimensions.get('window');
 
@@ -73,7 +73,7 @@ const createGoogleMapsUrl = (coords: { latitude: number; longitude: number }) =>
 };
 
 interface MapMarker {
-  id: number;
+  id: string;
   coordinates: { latitude: number; longitude: number };
   title: string;
   description?: string;
@@ -83,19 +83,16 @@ interface MapMarker {
 }
 
 export default function MapScreen() {
-  const [items, setItems] = useState<TripItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { tripItems, loading } = useTrips();
   const [markers, setMarkers] = useState<MapMarker[]>([]);
   const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
   const [showCallout, setShowCallout] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = getTripItems((newItems) => {
-      setItems(newItems);
-
+    if (tripItems) {
       // Process items into markers
-      const itemsWithCoords = newItems
+      const itemsWithCoords = tripItems
         .map(item => ({
           ...item,
           coords: parseGeolocation(item.geolocatition)
@@ -113,11 +110,8 @@ export default function MapScreen() {
       }));
 
       setMarkers(mapMarkers);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
+    }
+  }, [tripItems]);
 
   const handleMarkerPress = (marker: MapMarker) => {
     setSelectedMarker(marker);
@@ -128,7 +122,7 @@ export default function MapScreen() {
     if (selectedMarker) {
       router.push({
         pathname: '/modal',
-        params: { ...selectedMarker.item } as any,
+        params: { ...selectedMarker.item, tripId: selectedMarker.item.tripId } as any,
       });
       setShowCallout(false);
       setSelectedMarker(null);
@@ -288,24 +282,13 @@ export default function MapScreen() {
       </Box>
     </TouchableOpacity>
   );
-
-  if (loading) {
-    return (
-      <Center className="flex-1 bg-gray-50 dark:bg-gray-900">
-        <Spinner size="large" />
-        <Text className="mt-4 text-gray-600 dark:text-gray-400">
-          Cargando mapa del viaje...
-        </Text>
-      </Center>
-    );
-  }
-
-  const itemsWithCoords = items
-    .map(item => ({
-      ...item,
-      coords: parseGeolocation(item.geolocatition)
-    }))
-    .filter(item => item.coords);
+  
+  const itemsWithCoords = tripItems
+  .map(item => ({
+    ...item,
+    coords: parseGeolocation(item.geolocatition)
+  }))
+  .filter(item => item.coords);
 
   if (itemsWithCoords.length === 0) {
     return (
