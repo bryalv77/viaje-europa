@@ -1,6 +1,6 @@
 import React from 'react';
 import { Linking, Pressable, View } from 'react-native';
-import { TripItem } from '@/types';
+import { ParticipantObject, TripItem } from '@/types';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
@@ -38,10 +38,11 @@ const handleLink = async (url: string) => {
 
 interface TripListItemProps {
   item: TripItem;
+  participants: ParticipantObject;
   onPress: () => void;
 }
 
-export default function TripListItem({ item, onPress }: TripListItemProps) {
+export default function TripListItem({ item, participants, onPress }: TripListItemProps) {
   return (
     <View>
       <Box className="m-4 rounded-xl bg-white p-4 shadow-sm dark:bg-gray-800">
@@ -69,11 +70,11 @@ export default function TripListItem({ item, onPress }: TripListItemProps) {
             {item['initial_date']} {item.initial_time} - {item['end_date']} {item.end_time}
           </Text>
 
-          {item.participants && (
+          {item.participants &&  participants &&(
             <HStack className="mt-2 items-center">
               <FontAwesome name="user" size={16} color="gray" />
               <Text className="ml-2 text-gray-700 dark:text-gray-300">
-                {item.participants.join(', ')}
+                {item.participants.map(participantId => participants[participantId]?.name).join(', ')}
               </Text>
             </HStack>
           )}

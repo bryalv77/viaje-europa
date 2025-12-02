@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import { FlatList, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { TripItem } from '@/types';
-import { getTripItems } from '@/api/firebase';
 import { useRouter } from 'expo-router';
 import { Box } from '@/components/ui/box';
 import { Center } from '@/components/ui/center';
@@ -9,11 +8,12 @@ import { Text } from '@/components/ui/text';
 import { Spinner } from '@/components/ui/spinner';
 import { Input, InputField } from '@/components/ui/input';
 import TripListItem from '@/components/TripListItem';
+import { useTrips } from '@/hooks/useTrips';
 
 export default function TripScreen() {
-  const [items, setItems] = useState<TripItem[]>([]);
+  const { tripItems, participants, loading } = useTrips();
+  const [sortedItems, setSortedItems] = useState<TripItem[]>([]);
   const [filteredItems, setFilteredItems] = useState<TripItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [nextEvent, setNextEvent] = useState<TripItem | null>(null);
   const [countdown, setCountdown] = useState<{
@@ -25,25 +25,21 @@ export default function TripScreen() {
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = getTripItems((newItems) => {
-      const sortedItems = newItems.sort(
+    if (tripItems) {
+      const sorted = [...tripItems].sort(
         (a, b) =>
           new Date(`${a['initial_date']} ${a.initial_time}`).getTime() -
           new Date(`${b['initial_date']} ${b.initial_time}`).getTime()
       );
-      setItems(sortedItems);
+      setSortedItems(sorted);
 
       const now = new Date();
-      const futureEvent = sortedItems.find(
+      const futureEvent = sorted.find(
         (item) => new Date(`${item['initial_date']} ${item.initial_time}`) > now
       );
       setNextEvent(futureEvent || null);
-
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
+    }
+  }, [tripItems]);
 
   useEffect(() => {
     if (!nextEvent) {
@@ -59,7 +55,7 @@ export default function TripScreen() {
       if (difference <= 0) {
         setCountdown(null);
         const now = new Date();
-        const futureEvent = items.find(
+        const futureEvent = sortedItems.find(
           (item) => new Date(`${item['initial_date']} ${item.initial_time}`) > now
         );
         setNextEvent(futureEvent || null);
@@ -78,21 +74,21 @@ export default function TripScreen() {
     const interval = setInterval(calculateCountdown, 1000); 
 
     return () => clearInterval(interval);
-  }, [nextEvent, items]);
+  }, [nextEvent, sortedItems]);
 
   useEffect(() => {
     if (searchQuery === '') {
-      setFilteredItems(items);
+      setFilteredItems(sortedItems);
     } else {
       const lowercasedQuery = searchQuery.toLowerCase();
-      const filtered = items.filter((item) => {
+      const filtered = sortedItems.filter((item) => {
         return Object.values(item).some((value) =>
           String(value).toLowerCase().includes(lowercasedQuery)
         );
       });
       setFilteredItems(filtered);
     }
-  }, [searchQuery, items]);
+  }, [searchQuery, sortedItems]);
 
   const handleItemPress = (item: TripItem) => {
     router.push({
@@ -100,10 +96,6 @@ export default function TripScreen() {
       params: { ...item } as any,
     });
   };
-
-  const renderItem = ({ item }: { item: TripItem }) => (
-    <TripListItem item={item} onPress={() => handleItemPress(item)} />
-  );
 
   if (loading) {
     return (
@@ -140,9 +132,11 @@ export default function TripScreen() {
             </Text>
           </View>
         ) : filteredItems.map((item => (
-          <TripListItem key={item.id} item={item} onPress={() => handleItemPress(item)} />
+          <TripListItem key={item.id} item={item} onPress={() => handleItemPress(item)} participants={participants} />
         ) ))
       }
     </ScrollView>
   );
 }
+
+

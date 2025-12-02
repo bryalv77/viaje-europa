@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { ScrollView, Pressable, Alert } from 'react-native';
-
 import { useAuth } from '@/hooks/useAuth';
 import * as ImagePicker from 'expo-image-picker';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -9,13 +8,21 @@ import { Toast, ToastTitle, useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
 import { Heading } from '@/components/ui/heading';
 import { Box } from '@/components/ui/box';
-import { Avatar, AvatarFallbackText, AvatarImage } from '@/components/ui/avatar';
+import {
+  Avatar,
+  AvatarFallbackText,
+  AvatarImage,
+} from '@/components/ui/avatar';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { Input, InputField } from '@/components/ui/input';
+import { useTrips } from '@/hooks/useTrips';
+import { Spinner } from '@/components/ui/spinner';
+import { Card } from '@/components/ui/card';
 
 export default function ProfileScreen() {
   const { user, updateUserProfile, updateUserPassword } = useAuth();
+  const { trips, loading: tripsLoading } = useTrips();
   const toast = useToast();
 
   const [firstName, setFirstName] = useState('');
@@ -35,7 +42,10 @@ export default function ProfileScreen() {
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (permissionResult.granted === false) {
-      Alert.alert('Permission required', 'Permission to access photos is required!');
+      Alert.alert(
+        'Permission required',
+        'Permission to access photos is required!'
+      );
       return;
     }
 
@@ -124,7 +134,9 @@ export default function ProfileScreen() {
               <AvatarFallbackText>
                 {user?.displayName?.charAt(0)}
               </AvatarFallbackText>
-              {user?.photoURL && <AvatarImage source={{ uri: user.photoURL }} />}
+              {user?.photoURL && (
+                <AvatarImage source={{ uri: user.photoURL }} />
+              )}
             </Avatar>
           </Pressable>
           <Button
@@ -133,7 +145,9 @@ export default function ProfileScreen() {
             onPress={handleChoosePhoto}
             disabled={isUploading}
           >
-            <ButtonText>{isUploading ? 'Uploading...' : 'Change Photo'}</ButtonText>
+            <ButtonText>
+              {isUploading ? 'Uploading...' : 'Change Photo'}
+            </ButtonText>
           </Button>
         </Box>
 
@@ -162,6 +176,22 @@ export default function ProfileScreen() {
           <Button onPress={handleSaveProfile}>
             <ButtonText>Save Profile</ButtonText>
           </Button>
+        </VStack>
+
+        <VStack space="md" className="mt-8">
+          <Heading size="md">My Trips</Heading>
+          {tripsLoading ? (
+            <Spinner />
+          ) : trips.length > 0 ? (
+            trips.map((trip) => (
+              <Card key={trip.id} className="p-4">
+                <Heading size="sm">{trip.name}</Heading>
+                <Text>{trip.description}</Text>
+              </Card>
+            ))
+          ) : (
+            <Text>No trips found.</Text>
+          )}
         </VStack>
 
         <VStack space="md" className="mt-8">

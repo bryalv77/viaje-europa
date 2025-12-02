@@ -27,16 +27,16 @@ export interface TripItemObject {
   [key: string]: TripItem;
 }
 
-export interface User {
+export interface UserData {
   uid: string;
   name: string;
   email: string;
   role: 'client' | 'admin';
-  trips?: string[]; 
+  trips?: string[];
 }
 
 export interface Trip {
-  items: TripItemObject;
+  items?: { [key: string]: TripItem };
   participants: ParticipantObject;
   tripId: string;
 }
